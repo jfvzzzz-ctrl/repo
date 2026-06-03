@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سفر Pro | نظام إدارة الحجوزات</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Cairo',sans-serif;background:#f0f4f8;color:#1e293b}
+.topbar{background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:#fff;padding:15px 25px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.topbar-title{font-size:20px;font-weight:700;display:flex;align-items:center;gap:10px}
+.topbar-title i{font-size:24px;color:#38bdf8}
+.topbar-badge{background:#38bdf8;color:#0f172a;padding:2px 8px;border-radius:30px;font-size:11px}
+.topbar-user{display:flex;align-items:center;gap:10px;background:#1e293b;padding:5px 15px;border-radius:30px}
+.logout-btn{background:#dc2626;color:#fff;border:none;padding:5px 12px;border-radius:30px;cursor:pointer;font-size:12px}
+.container{max-width:1400px;margin:0 auto;padding:20px}
+.tabs{display:flex;gap:10px;margin-bottom:25px;flex-wrap:wrap;overflow-x:auto}
+.tab{padding:10px 22px;border-radius:40px;border:none;background:#fff;color:#64748b;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.tab.active{background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:#fff}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin-bottom:25px}
+.stat-card{background:#fff;border-radius:24px;padding:18px;box-shadow:0 4px 12px rgba(0,0,0,0.05);text-align:center}
+.stat-card .value{font-size:28px;font-weight:800;color:#0f172a}
+.stat-card .label{font-size:12px;color:#64748b;margin-top:5px}
+.card{background:#fff;border-radius:24px;padding:22px 25px;margin-bottom:20px;box-shadow:0 4px 12px rgba(0,0,0,0.05)}
+.card-title{font-size:18px;font-weight:700;margin-bottom:18px;border-bottom:2px solid #e2e8f0;padding-bottom:10px;display:flex;align-items:center;gap:10px}
+.form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.fg{display:flex;flex-direction:column;gap:6px}
+.fg.full{grid-column:1/-1}
+label{font-size:12px;font-weight:600;color:#475569}
+input,select,textarea{padding:10px 14px;border:2px solid #e2e8f0;border-radius:16px;font-size:14px;font-family:inherit;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#38bdf8}
+.btn-row{display:flex;justify-content:flex-end;gap:12px;margin-top:20px}
+.btn{padding:8px 22px;border-radius:40px;border:none;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:#fff}
+.btn-green{background:#059669;color:#fff}
+.btn-red{background:#dc2626;color:#fff}
+.btn-wa{background:#25D366;color:#fff}
+.btn-outline{background:transparent;border:1px solid #cbd5e1}
+.filter-row{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.filter-row input,.filter-row select{flex:1;min-width:150px;padding:10px 14px;border:2px solid #e2e8f0;border-radius:14px}
+.blist{display:flex;flex-direction:column;gap:15px}
+.bcard{background:#fff;border-radius:24px;padding:20px 24px;border:1px solid #e2e8f0}
+.bcard.confirmed{background:#ecfdf5;border-right:4px solid #059669}
+.bcard.cancelled{background:#fef2f2;border-right:4px solid #dc2626}
+.bhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.bname{font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px}
+.badges{display:flex;gap:6px;flex-wrap:wrap}
+.badge{padding:4px 12px;border-radius:30px;font-size:11px;font-weight:600}
+.badge-info{background:#dbeafe;color:#1e40af}
+.badge-success{background:#d1fae5;color:#065f46}
+.badge-warning{background:#fed7aa;color:#92400e}
+.badge-danger{background:#fee2e2;color:#991b1b}
+.bmeta{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:12px 0}
+.mi{font-size:12px;color:#64748b;display:flex;align-items:center;gap:6px}
+.mi i{width:18px;color:#38bdf8}
+.bactions{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0;flex-wrap:wrap}
+.bsm{padding:6px 14px;border-radius:30px;border:none;background:#f1f5f9;font-size:12px;cursor:pointer}
+.bsm:hover{background:#e2e8f0}
+.service-item{background:#f8fafc;border-radius:16px;padding:12px;margin-bottom:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.service-item select{flex:2;padding:8px;border-radius:12px;border:1px solid #e2e8f0}
+.service-item input{width:120px;padding:8px;border-radius:12px;border:1px solid #e2e8f0}
+.service-total{background:#ecfdf5;padding:15px;border-radius:16px;margin-top:10px;display:flex;justify-content:space-between}
+.chart-card{background:#fff;border-radius:24px;padding:20px;margin-bottom:20px}
+.chart-title{font-size:16px;font-weight:700;margin-bottom:15px;border-bottom:2px solid #e2e8f0;padding-bottom:10px;display:flex;align-items:center;gap:8px}
+.chart-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:20px}
+.empty{text-align:center;padding:60px 20px;color:#94a3b8}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:32px;padding:28px;width:90%;max-width:500px}
+.login-container{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f172a,#1e293b)}
+.login-box{background:#fff;border-radius:32px;padding:40px;width:90%;max-width:420px;text-align:center}
+.login-box input{width:100%;margin-bottom:15px}
+.user-card{background:#f8fafc;border-radius:16px;padding:15px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.backup-actions{display:flex;gap:10px;justify-content:flex-end;margin-bottom:20px;flex-wrap:wrap}
+@media(max-width:900px){.form-grid{grid-template-columns:repeat(2,1fr)}.chart-row{grid-template-columns:1fr}}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr}}
+.sync-indicator{display:flex;align-items:center;gap:6px;font-size:12px;padding:4px 12px;border-radius:30px;background:#1e293b}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#94a3b8}
+.sync-dot.ok{background:#22c55e;animation:pulse 2s infinite}
+.sync-dot.syncing{background:#f59e0b;animation:spin 1s linear infinite}
+.sync-dot.error{background:#ef4444}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.trips-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px;margin-top:10px}
+.trip-card{background:#fff;border-radius:20px;padding:20px;border:1px solid #e2e8f0;display:flex;flex-direction:column;gap:12px}
+.trip-card-title{font-size:15px;font-weight:700;color:#0f172a}
+.trip-card-date{font-size:11px;color:#94a3b8}
+.trip-pdf-btn{background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;border:none;border-radius:30px;padding:8px 18px;cursor:pointer;font-size:13px;font-family:inherit;display:flex;align-items:center;gap:6px;justify-content:center}
+.upload-zone{border:2px dashed #cbd5e1;border-radius:20px;padding:30px;text-align:center;color:#94a3b8;cursor:pointer;transition:border-color .2s}
+.upload-zone:hover{border-color:#38bdf8;color:#38bdf8}
+</style>
+</head>
+<body>
+
+<!-- شاشة تسجيل الدخول -->
+<div id="loginScreen" class="login-container">
+  <div class="login-box">
+    <i class="ti ti-plane-tilt" style="font-size:48px;color:#0f172a"></i>
+    <h2 style="margin-bottom:30px">سفر Pro</h2>
+    <input type="text" id="loginUsername" placeholder="اسم المستخدم">
+    <input type="password" id="loginPassword" placeholder="كلمة المرور">
+    <button class="btn btn-primary" onclick="login()" style="width:100%">دخول</button>
+    <div id="loginError" style="color:#dc2626;font-size:12px;margin-top:10px;display:none"></div>
+  </div>
+</div>
+
+<!-- الواجهة الرئيسية -->
+<div id="mainApp" style="display:none">
+<div class="topbar">
+  <div class="topbar-title"><i class="ti ti-plane-tilt"></i> سفر Pro <span class="topbar-badge">احترافي</span></div>
+  <div style="display:flex;align-items:center;gap:15px">
+    <div class="sync-indicator"><div class="sync-dot" id="syncDot"></div><span id="syncText">جاري الاتصال...</span></div>
+    <div class="topbar-user"><i class="ti ti-user"></i><span id="currentUserName"></span></div>
+    <div id="topbar-date" style="font-size:13px"></div>
+    <button class="logout-btn" onclick="logout()">خروج</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('dashboard')">لوحة التحكم</button>
+    <button class="tab" onclick="showTab('bookings')">الحجوزات</button>
+    <button class="tab" onclick="showTab('cancelled')">الملغية</button>
+    <button class="tab" onclick="showTab('clients')">العملاء</button>
+    <button class="tab" onclick="showTab('add')">حجز جديد</button>
+    <button class="tab" onclick="showTab('reports')">التقارير</button>
+    <button class="tab" onclick="showTab('trips')">📋 برنامج الرحلات</button>
+    <button class="tab" onclick="showTab('users')" id="tabUsers">إدارة الموظفين</button>
+  </div>
+
+  <div class="backup-actions">
+    <button class="btn btn-outline" onclick="exportJSON()">📥 تصدير JSON</button>
+    <label class="btn btn-outline" style="cursor:pointer">📤 استيراد JSON<input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(this)"></label>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="tab-dashboard">
+    <div class="stats-grid" id="dashboardStats"></div>
+    <div class="chart-row">
+      <div class="chart-card"><div class="chart-title">الإيرادات الشهرية</div><canvas id="revenueChart"></canvas></div>
+      <div class="chart-card"><div class="chart-title">توزيع الحجوزات حسب الوجهة</div><canvas id="destinationsChart"></canvas></div>
+    </div>
+    <div class="chart-row">
+      <div class="chart-card"><div class="chart-title">أداء الموظفين</div><canvas id="agentsChart"></canvas></div>
+      <div class="chart-card"><div class="chart-title">نسبة النجاح</div><canvas id="conversionChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- الحجوزات -->
+  <div id="tab-bookings" style="display:none">
+    <div class="stats-grid" id="bookingsStats"></div>
+    <div class="filter-row">
+      <input type="text" id="searchBooking" placeholder="بحث..." oninput="renderBookings()">
+      <select id="countryFilter" onchange="renderBookings()"><option value="">كل الوجهات</option>
+        <option>أوروبا حرة</option><option>أوروبا جماعي</option><option>روسيا</option><option>جورجيا</option>
+        <option>الشمال التركي</option><option>اسطنبول</option><option>اندونيسيا</option><option>ماليزيا</option>
+        <option>تايلاند</option><option>سيرلانكا</option><option>الهند</option><option>موريشيوس</option>
+        <option>المالديف</option><option>الصين</option><option>اليابان</option><option>اذربيجان</option><option>غير ذلك</option>
+      </select>
+      <select id="agentFilter" onchange="renderBookings()"><option value="">كل الموظفين</option></select>
+      <button class="btn btn-green" onclick="exportToExcel()">تصدير Excel</button>
+    </div>
+    <div class="blist" id="bookingsList"></div>
+  </div>
+
+  <!-- الملغية -->
+  <div id="tab-cancelled" style="display:none">
+    <div class="stats-grid" id="cancelledStats"></div>
+    <div class="filter-row"><input type="text" id="searchCancelled" placeholder="بحث..." oninput="renderCancelled()"><button class="btn btn-green" onclick="exportCancelledToExcel()">تصدير Excel</button></div>
+    <div class="blist" id="cancelledList"></div>
+  </div>
+
+  <!-- العملاء -->
+  <div id="tab-clients" style="display:none">
+    <div class="card"><div class="card-title">بحث عن عميل</div><input type="text" id="clientSearch" placeholder="بحث..." oninput="renderClients()"><div id="clientsList" style="margin-top:20px"></div></div>
+  </div>
+
+  <!-- إضافة حجز -->
+  <div id="tab-add" style="display:none">
+    <div class="card">
+      <div class="card-title">بيانات العميل</div>
+      <div class="form-grid">
+        <div class="fg"><label>اسم العميل</label><input type="text" id="clientName"></div>
+        <div class="fg"><label>رقم الهاتف</label><input type="tel" id="clientPhone"></div>
+        <div class="fg"><label>البريد الإلكتروني</label><input type="email" id="clientEmail"></div>
+        <div class="fg"><label>عدد المسافرين</label><input type="number" id="travelers" value="2"></div>
+        <div class="fg"><label>الموظف المسؤول</label><select id="agentName"></select></div>
+        <div class="fg"><label>مصدر الحجز</label><select id="bookingSource"><option>واتساب</option><option>إنستغرام</option><option>هاتف</option></select></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">معلومات الرحلة</div>
+      <div class="form-grid">
+        <div class="fg"><label>الدولة</label><select id="country"><option value="">اختر الدولة</option>
+          <option>أوروبا حرة</option><option>أوروبا جماعي</option><option>روسيا</option><option>جورجيا</option>
+          <option>الشمال التركي</option><option>اسطنبول</option><option>اندونيسيا</option><option>ماليزيا</option>
+          <option>تايلاند</option><option>سيرلانكا</option><option>الهند</option><option>موريشيوس</option>
+          <option>المالديف</option><option>الصين</option><option>اليابان</option><option>اذربيجان</option><option>غير ذلك</option>
+        </select></div>
+        <div class="fg"><label>المدينة</label><input type="text" id="city"></div>
+        <div class="fg"><label>تاريخ المغادرة</label><input type="date" id="departureDate"></div>
+        <div class="fg"><label>تاريخ العودة</label><input type="date" id="returnDate"></div>
+        <div class="fg"><label>نوع الرحلة</label><select id="tripType"><option>سياحية</option><option>شهر عسل</option><option>علاجية</option></select></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">الفندق</div>
+      <div class="form-grid">
+        <div class="fg"><label>اسم الفندق</label><input type="text" id="hotelName"></div>
+        <div class="fg"><label>منطقة الفندق</label><input type="text" id="hotelArea"></div>
+        <div class="fg"><label>تاريخ الدخول</label><input type="date" id="checkIn"></div>
+        <div class="fg"><label>تاريخ الخروج</label><input type="date" id="checkOut"></div>
+        <div class="fg"><label>نوع الغرفة</label><select id="roomType"><option>غرفة قياسية</option><option>جناح</option></select></div>
+        <div class="fg"><label>نظام الإقامة</label><select id="mealPlan"><option>بدون وجبات</option><option>إفطار فقط</option></select></div>
+        <div class="fg"><label>رقم حجز الفندق</label><input type="text" id="hotelBookingRef"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">الخدمات الإضافية</div>
+      <div id="servicesContainer"></div>
+      <button class="btn-outline" onclick="addService()" style="width:100%;margin-top:10px">+ إضافة خدمة</button>
+      <div class="service-total"><span>إجمالي الخدمات:</span><span id="servicesTotalPrice">0 JD</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">المالية</div>
+      <div class="form-grid">
+        <div class="fg"><label>سعر الرحلة (JD)</label><input type="number" id="basePrice" oninput="updateTotals()"></div>
+        <div class="fg"><label>المدفوع (JD)</label><input type="number" id="paidAmount" oninput="updateTotals()"></div>
+        <div class="fg"><label>المتبقي (JD)</label><input type="number" id="remainingAmount" readonly></div>
+      </div>
+      <div class="fg full"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+    </div>
+    <div class="btn-row"><button class="btn" onclick="clearForm()">مسح</button><button class="btn btn-primary" onclick="saveBooking()">حفظ</button></div>
+  </div>
+
+  <!-- التقارير -->
+  <div id="tab-reports" style="display:none">
+    <div class="card"><div class="card-title">فلترة التقرير</div><div class="form-grid"><div class="fg"><label>من تاريخ</label><input type="date" id="reportStart"></div><div class="fg"><label>إلى تاريخ</label><input type="date" id="reportEnd"></div></div><button class="btn btn-primary" onclick="generateReport()">عرض التقرير</button><button class="btn btn-green" onclick="printReport()">طباعة</button></div>
+    <div id="reportPreview" class="card" style="display:none"></div>
+  </div>
+
+  <!-- برنامج الرحلات -->
+  <div id="tab-trips" style="display:none">
+    <div class="card" id="tripsUploadCard" style="display:none">
+      <div class="card-title">📤 رفع برنامج رحلة (PDF)</div>
+      <div class="form-grid">
+        <div class="fg"><label>عنوان البرنامج</label><input type="text" id="tripDocTitle" placeholder="مثال: برنامج تركيا مايو 2025"></div>
+        <div class="fg"><label>الوصف (اختياري)</label><input type="text" id="tripDocDesc" placeholder="وصف مختصر"></div>
+      </div>
+      <div class="upload-zone" onclick="document.getElementById('tripFileInput').click()" id="uploadZone">
+        <i class="ti ti-file-type-pdf" style="font-size:40px;margin-bottom:10px"></i>
+        <div>اضغط لاختيار ملف PDF</div>
+        <div style="font-size:11px;margin-top:5px">الحد الأقصى: 5 ميجابايت</div>
+        <input type="file" id="tripFileInput" accept=".pdf" style="display:none" onchange="handleTripFileSelect(this)">
+      </div>
+      <div id="uploadProgress" style="display:none;margin-top:10px">
+        <div style="background:#e2e8f0;border-radius:10px;height:8px"><div id="uploadBar" style="background:#059669;height:8px;border-radius:10px;width:0%;transition:width .3s"></div></div>
+        <div id="uploadMsg" style="font-size:12px;color:#64748b;margin-top:5px;text-align:center"></div>
+      </div>
+      <div class="btn-row"><button class="btn btn-primary" onclick="uploadTripDoc()">رفع البرنامج</button></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 برامج الرحلات المتاحة</div>
+      <div class="trips-grid" id="tripsGrid"><div class="empty">لا توجد برامج رحلات بعد</div></div>
+    </div>
+  </div>
+
+  <!-- إدارة الموظفين -->
+  <div id="tab-users" style="display:none">
+    <div class="card"><div class="card-title">إضافة موظف</div><div class="form-grid"><div class="fg"><label>اسم المستخدم</label><input type="text" id="newUsername"></div><div class="fg"><label>كلمة المرور</label><input type="password" id="newPassword"></div><div class="fg"><label>الاسم الظاهر</label><input type="text" id="newFullName"></div></div><button class="btn btn-primary" onclick="addEmployee()">إضافة</button></div>
+    <div class="card"><div class="card-title">قائمة الموظفين</div><div id="usersList"></div></div>
+  </div>
+</div></div>
+
+<!-- مودالات -->
+<div class="modal-bg" id="confirmModal"><div class="modal"><div class="card-title">تأكيد الحجز</div><div id="confirmInfo"></div><div class="btn-row"><button onclick="closeConfirmModal()">إلغاء</button><button class="btn-green" onclick="confirmBooking()">تأكيد</button></div></div></div>
+<div class="modal-bg" id="cancelModal"><div class="modal"><div class="card-title">إلغاء الحجز</div><div id="cancelInfo"></div><div class="fg"><label>سبب الإلغاء</label><select id="cancelReason"><option>السعر مرتفع</option><option>تاريخ غير مناسب</option><option>العميل طلب الإلغاء</option><option>لم يرد على الاتصال</option></select></div><div class="btn-row"><button onclick="closeCancelModal()">إلغاء</button><button class="btn-red" onclick="confirmCancel()">تأكيد</button></div></div></div>
+
+<script>
+// ==================== دوال التشفير ====================
+function hashPassword(pwd) { return CryptoJS.SHA256(pwd).toString(); }
+
+// ==================== إعدادات Google Sheets ====================
+const GS_URL = 'https://script.google.com/macros/s/AKfycby2LuVgG7Pquz48cDX92IkxRlhA0f943gy-QRkNjtfgmCYvO4m5rU4nJczJ5h8FVOER/exec';
+let syncTimeout = null;
+let lastSyncTime = null;
+
+function setSyncStatus(status, text) {
+  const dot = document.getElementById('syncDot');
+  const label = document.getElementById('syncText');
+  if (!dot || !label) return;
+  dot.className = 'sync-dot ' + status;
+  label.textContent = text;
+}
+
+async function loadFromSheets() {
+  setSyncStatus('syncing', 'جاري التحميل...');
+  try {
+    const res = await fetch(GS_URL + '?action=read&t=' + Date.now());
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    if (data.users && data.users.length > 0) users = data.users;
+    else if (!users.length) users = [{ username: "admin", passwordHash: hashPassword("admin123"), role: "admin", fullName: "مدير النظام" }];
+
+    bookings = data.bookings || [];
+    cancelledBookings = data.cancelled || [];
+    tripDocs = data.trips || [];
+
+    // حفظ نسخة محلية احتياطية
+    localStorage.setItem('travel_users', JSON.stringify(users));
+    localStorage.setItem('travel_bookings', JSON.stringify(bookings));
+    localStorage.setItem('travel_cancelled', JSON.stringify(cancelledBookings));
+    localStorage.setItem('travel_trips', JSON.stringify(tripDocs));
+
+    setSyncStatus('ok', 'متصل ✓');
+    lastSyncTime = Date.now();
+    return true;
+  } catch (e) {
+    setSyncStatus('error', 'خطأ في الاتصال');
+    // استخدام البيانات المحلية كاحتياطية
+    loadFromLocal();
+    return false;
+  }
+}
+
+async function saveToSheets() {
+  setSyncStatus('syncing', 'جاري الحفظ...');
+  // حفظ محلي فوري
+  localStorage.setItem('travel_users', JSON.stringify(users));
+  localStorage.setItem('travel_bookings', JSON.stringify(bookings));
+  localStorage.setItem('travel_cancelled', JSON.stringify(cancelledBookings));
+  localStorage.setItem('travel_trips', JSON.stringify(tripDocs));
+  try {
+    const payload = { bookings, cancelled: cancelledBookings, users, trips: tripDocs };
+    const res = await fetch(GS_URL + '?action=write&data=' + encodeURIComponent(JSON.stringify(payload)));
+    const result = await res.json();
+    if (result.error) throw new Error(result.error);
+    setSyncStatus('ok', 'تم الحفظ ✓');
+    lastSyncTime = Date.now();
+  } catch (e) {
+    setSyncStatus('error', 'حُفظ محلياً فقط');
+  }
+}
+
+function loadFromLocal() {
+  const su = localStorage.getItem('travel_users');
+  if (su) users = JSON.parse(su);
+  else users = [{ username: "admin", passwordHash: hashPassword("admin123"), role: "admin", fullName: "مدير النظام" }];
+  const sb = localStorage.getItem('travel_bookings');
+  if (sb) bookings = JSON.parse(sb);
+  const sc = localStorage.getItem('travel_cancelled');
+  if (sc) cancelledBookings = JSON.parse(sc);
+  const st = localStorage.getItem('travel_trips');
+  if (st) tripDocs = JSON.parse(st);
+}
+
+function saveAllData() { saveToSheets(); }
+
+async function loadAllData() {
+  loadFromLocal(); // تحميل فوري من المحلي
+  await loadFromSheets(); // ثم تحديث من السيرفر
+}
+
+// مزامنة دورية كل 30 ثانية
+setInterval(() => { if (currentUser) loadFromSheets().then(() => { renderAll(); renderTripDocs(); }); }, 30000);
+
+// ==================== البيانات الأساسية ====================
+let users = [];
+let bookings = [];
+let cancelledBookings = [];
+let tripDocs = [];
+let currentUser = null;
+let currentEditId = null;
+let currentActionId = null;
+let charts = {};
+let selectedTripFile = null;
+
+const availableServices = ["🚗 نقل مطار", "📱 شريحة اتصال", "🗺️ جولة سياحية"];
+
+// ==================== تسجيل الدخول ====================
+function login() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const user = users.find(u => u.username === username && u.passwordHash === hashPassword(password));
+  if (user) {
+    currentUser = user;
+    localStorage.setItem('current_session', JSON.stringify({ username: user.username }));
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    document.getElementById('currentUserName').innerHTML = user.fullName;
+    updateEmployeeSelect();
+    renderAll();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+    document.getElementById('loginError').innerHTML = 'بيانات دخول غير صحيحة';
+  }
+}
+
+function logout() {
+  currentUser = null;
+  localStorage.removeItem('current_session');
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('mainApp').style.display = 'none';
+}
+
+// ==================== إدارة الموظفين ====================
+function updateEmployeeSelect() {
+  const select = document.getElementById('agentName');
+  const filter = document.getElementById('agentFilter');
+  const employees = users.filter(u => u.role === 'employee' || u.role === 'admin');
+  if (select) select.innerHTML = '<option value="">اختر الموظف</option>' + employees.map(u => `<option value="${u.username}">${u.fullName}</option>`).join('');
+  if (filter) filter.innerHTML = '<option value="">كل الموظفين</option>' + employees.map(u => `<option value="${u.username}">${u.fullName}</option>`).join('');
+}
+
+function getEmployeeName(username) {
+  const user = users.find(u => u.username === username);
+  return user ? user.fullName : username;
+}
+
+function addEmployee() {
+  if (currentUser?.role !== 'admin') { alert('غير مصرح - فقط المدير'); return; }
+  const username = document.getElementById('newUsername').value.trim();
+  const password = document.getElementById('newPassword').value;
+  const fullName = document.getElementById('newFullName').value.trim();
+  if (!username || !password) { alert('الرجاء إدخال البيانات'); return; }
+  if (users.find(u => u.username === username)) { alert('اسم المستخدم موجود'); return; }
+  users.push({ username, passwordHash: hashPassword(password), role: 'employee', fullName: fullName || username });
+  saveAllData();
+  document.getElementById('newUsername').value = '';
+  document.getElementById('newPassword').value = '';
+  document.getElementById('newFullName').value = '';
+  renderUsersList();
+  updateEmployeeSelect();
+  alert('✅ تم إضافة الموظف');
+}
+
+function deleteEmployee(username) {
+  if (currentUser?.role !== 'admin') return;
+  if (username === 'admin') { alert('لا يمكن حذف المدير'); return; }
+  users = users.filter(u => u.username !== username);
+  saveAllData();
+  renderUsersList();
+  updateEmployeeSelect();
+}
+
+function renderUsersList() {
+  const container = document.getElementById('usersList');
+  if (!container) return;
+  container.innerHTML = users.map(u => `
+    <div class="user-card">
+      <div><strong>${u.fullName}</strong><br><small>${u.username}</small></div>
+      <div>${u.role === 'admin' ? 'مدير' : 'موظف'}</div>
+      ${u.username !== 'admin' ? `<button class="btn-outline" onclick="deleteEmployee('${u.username}')">حذف</button>` : ''}
+    </div>
+  `).join('');
+}
+
+// ==================== الخدمات الإضافية ====================
+function addService(sData) {
+  const container = document.getElementById('servicesContainer');
+  const div = document.createElement('div'); div.className = 'service-item';
+  let opts = '<select class="service-type">';
+  availableServices.forEach(s => opts += `<option value="${s}">${s}</option>`);
+  opts += '</select>';
+  div.innerHTML = `${opts}<input type="number" class="service-price" placeholder="السعر" value="0"><button class="btn-outline" onclick="this.closest('.service-item').remove(); updateTotals()">🗑️</button>`;
+  if (sData) { div.querySelector('.service-type').value = sData.name; div.querySelector('.service-price').value = sData.price; }
+  div.querySelector('.service-price').oninput = () => updateTotals();
+  container.appendChild(div); updateTotals();
+}
+
+function getServices() {
+  const s = [];
+  document.querySelectorAll('#servicesContainer .service-item').forEach(i => {
+    const n = i.querySelector('.service-type')?.value;
+    const p = parseFloat(i.querySelector('.service-price')?.value) || 0;
+    if (n && p > 0) s.push({ name: n, price: p });
+  });
+  return s;
+}
+
+function setServices(sv) {
+  const c = document.getElementById('servicesContainer');
+  if (c) { c.innerHTML = ''; if (sv && sv.length) sv.forEach(s => addService(s)); else addService(); updateTotals(); }
+}
+
+function updateTotals() {
+  let st = 0;
+  document.querySelectorAll('#servicesContainer .service-item .service-price').forEach(i => { st += parseFloat(i.value) || 0; });
+  document.getElementById('servicesTotalPrice') && (document.getElementById('servicesTotalPrice').innerHTML = st.toFixed(2) + ' JD');
+  const base = parseFloat(document.getElementById('basePrice')?.value) || 0;
+  const paid = parseFloat(document.getElementById('paidAmount')?.value) || 0;
+  const total = base + st;
+  document.getElementById('remainingAmount') && (document.getElementById('remainingAmount').value = (total - paid).toFixed(2));
+}
+
+// ==================== دوال واتساب ====================
+function sendWhatsApp(phone, name, country) {
+  if (!phone) { alert('لا يوجد رقم هاتف'); return; }
+  let cleanPhone = phone.replace(/\D/g, '');
+  if (cleanPhone.startsWith('0')) cleanPhone = '962' + cleanPhone.substring(1);
+  if (!cleanPhone.startsWith('962')) cleanPhone = '962' + cleanPhone;
+  const msg = `مرحباً ${name} 👋\nنذكركم برحلتكم إلى ${country}\nنتمنى لكم رحلة ممتعة!`;
+  window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+// ==================== عرض الحجوزات ====================
+function renderBookings() {
+  const search = (document.getElementById('searchBooking')?.value || '').toLowerCase();
+  const country = document.getElementById('countryFilter')?.value || '';
+  const agent = document.getElementById('agentFilter')?.value || '';
+  let filtered = bookings.filter(b => {
+    if (search && !b.clientName.toLowerCase().includes(search)) return false;
+    if (country && b.country !== country) return false;
+    if (agent && b.agentName !== agent) return false;
+    return true;
+  });
+  
+  const totalRev = bookings.reduce((s, b) => s + (b.totalPrice || 0), 0);
+  const totalPaid = bookings.reduce((s, b) => s + (b.paidAmount || 0), 0);
+  document.getElementById('bookingsStats').innerHTML = `
+    <div class="stat-card"><div class="value">${bookings.length}</div><div class="label">إجمالي الحجوزات</div></div>
+    <div class="stat-card"><div class="value">${Math.round(totalRev).toLocaleString()} JD</div><div class="label">الإيرادات</div></div>
+    <div class="stat-card"><div class="value">${Math.round(totalPaid).toLocaleString()} JD</div><div class="label">المدفوع</div></div>
+  `;
+  
+  if (filtered.length === 0) { document.getElementById('bookingsList').innerHTML = '<div class="empty">لا توجد حجوزات</div>'; return; }
+  
+  document.getElementById('bookingsList').innerHTML = filtered.map(b => `
+    <div class="bcard ${b.isConfirmed ? 'confirmed' : ''}">
+      <div class="bhead"><span class="bname">${b.clientName}</span><div class="badges"><span class="badge badge-info">${b.country}</span><span class="badge ${b.isConfirmed ? 'badge-success' : 'badge-warning'}">${b.isConfirmed ? 'مؤكد' : 'قيد الانتظار'}</span></div></div>
+      <div class="bmeta"><span class="mi">🏨 ${b.hotelName || 'لا يوجد'}</span><span class="mi">📅 ${b.departureDate || '—'} → ${b.returnDate || '—'}</span><span class="mi">💰 ${(b.totalPrice || 0).toLocaleString()} JD</span><span class="mi">👤 ${getEmployeeName(b.agentName)}</span></div>
+      ${b.notes ? `<div style="font-size:12px;padding:8px;background:#f8fafc;border-radius:12px">📝 ${b.notes}</div>` : ''}
+      <div class="bactions">
+        <button class="bsm" onclick="editBooking('${b.id}')">تعديل</button>
+        ${!b.isConfirmed ? `<button class="bsm btn-green" onclick="openConfirmModal('${b.id}')">تأكيد</button>` : ''}
+        <button class="bsm btn-red" onclick="openCancelModal('${b.id}')">إلغاء</button>
+        ${b.clientPhone ? `<button class="bsm btn-wa" onclick="sendWhatsApp('${b.clientPhone}','${b.clientName}','${b.country}')">واتساب</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderCancelled() {
+  const search = (document.getElementById('searchCancelled')?.value || '').toLowerCase();
+  let filtered = cancelledBookings.filter(c => !search || c.clientName.toLowerCase().includes(search));
+  document.getElementById('cancelledStats').innerHTML = `<div class="stat-card"><div class="value">${cancelledBookings.length}</div><div class="label">حجوزات ملغية</div></div>`;
+  if (filtered.length === 0) { document.getElementById('cancelledList').innerHTML = '<div class="empty">لا توجد حجوزات ملغية</div>'; return; }
+  document.getElementById('cancelledList').innerHTML = filtered.map(c => `
+    <div class="bcard cancelled"><div class="bhead"><span class="bname">${c.clientName}</span><div class="badges"><span class="badge badge-danger">ملغي</span></div></div>
+    <div class="bmeta"><span class="mi">📅 ${c.departureDate || '—'}</span><span class="mi">💰 ${(c.totalPrice || 0).toLocaleString()} JD</span><span class="mi">📝 السبب: ${c.reason || 'غير محدد'}</span></div>
+    </div>
+  `).join('');
+}
+
+function renderClients() {
+  const search = (document.getElementById('clientSearch')?.value || '').toLowerCase();
+  const map = new Map();
+  bookings.forEach(b => { if (!map.has(b.clientName)) map.set(b.clientName, []); map.get(b.clientName).push(b); });
+  let filtered = Array.from(map.entries()).filter(([n]) => !search || n.toLowerCase().includes(search));
+  if (filtered.length === 0) { document.getElementById('clientsList').innerHTML = '<div class="empty">لا يوجد عملاء</div>'; return; }
+  document.getElementById('clientsList').innerHTML = filtered.map(([name, trips]) => `
+    <div class="bcard"><div class="bhead"><span class="bname">${name}</span><span class="badge badge-info">${trips.length} رحلة</span></div>
+    <div class="bmeta"><span class="mi">💰 ${Math.round(trips.reduce((s, t) => s + (t.totalPrice || 0), 0)).toLocaleString()} JD</span><span class="mi">📧 ${trips[0]?.clientEmail || 'لا يوجد'}</span><span class="mi">📞 ${trips[0]?.clientPhone || 'لا يوجد'}</span></div>
+    </div>
+  `).join('');
+}
+
+// ==================== حفظ الحجز ====================
+function saveBooking() {
+  const name = document.getElementById('clientName').value.trim();
+  const country = document.getElementById('country').value;
+  const agent = document.getElementById('agentName').value;
+  if (!name || !country) { alert('الرجاء إدخال اسم العميل والدولة'); return; }
+  if (!agent) { alert('الرجاء اختيار الموظف المسؤول'); return; }
+  
+  const services = getServices();
+  const servicesTotal = services.reduce((s, x) => s + x.price, 0);
+  const basePrice = parseFloat(document.getElementById('basePrice').value) || 0;
+  const totalPrice = basePrice + servicesTotal;
+  const paidAmount = parseFloat(document.getElementById('paidAmount').value) || 0;
+  
+  const booking = {
+    id: currentEditId || Date.now().toString(),
+    clientName: name,
+    clientPhone: document.getElementById('clientPhone').value,
+    clientEmail: document.getElementById('clientEmail').value,
+    travelers: document.getElementById('travelers').value,
+    agentName: agent,
+    bookingSource: document.getElementById('bookingSource').value,
+    country: country,
+    city: document.getElementById('city').value,
+    departureDate: document.getElementById('departureDate').value,
+    returnDate: document.getElementById('returnDate').value,
+    tripType: document.getElementById('tripType').value,
+    hotelName: document.getElementById('hotelName').value,
+    hotelArea: document.getElementById('hotelArea').value,
+    checkIn: document.getElementById('checkIn').value,
+    checkOut: document.getElementById('checkOut').value,
+    roomType: document.getElementById('roomType').value,
+    mealPlan: document.getElementById('mealPlan').value,
+    hotelBookingRef: document.getElementById('hotelBookingRef').value,
+    services: services,
+    servicesTotal: servicesTotal,
+    basePrice: basePrice,
+    totalPrice: totalPrice,
+    paidAmount: paidAmount,
+    isConfirmed: false,
+    notes: document.getElementById('notes').value,
+    createdAt: Date.now()
+  };
+  
+  if (currentEditId) {
+    const idx = bookings.findIndex(b => b.id === currentEditId);
+    if (idx !== -1) bookings[idx] = booking;
+    currentEditId = null;
+  } else {
+    bookings.unshift(booking);
+  }
+  
+  saveAllData();
+  clearForm();
+  renderAll();
+  showTab('bookings');
+  alert('✅ تم حفظ الحجز');
+}
+
+function editBooking(id) {
+  const b = bookings.find(b => b.id === id);
+  if (!b) return;
+  currentEditId = id;
+  document.getElementById('clientName').value = b.clientName;
+  document.getElementById('clientPhone').value = b.clientPhone || '';
+  document.getElementById('clientEmail').value = b.clientEmail || '';
+  document.getElementById('travelers').value = b.travelers || 2;
+  document.getElementById('agentName').value = b.agentName || '';
+  document.getElementById('bookingSource').value = b.bookingSource || 'واتساب';
+  document.getElementById('country').value = b.country || '';
+  document.getElementById('city').value = b.city || '';
+  document.getElementById('departureDate').value = b.departureDate || '';
+  document.getElementById('returnDate').value = b.returnDate || '';
+  document.getElementById('tripType').value = b.tripType || 'سياحية';
+  document.getElementById('hotelName').value = b.hotelName || '';
+  document.getElementById('hotelArea').value = b.hotelArea || '';
+  document.getElementById('checkIn').value = b.checkIn || '';
+  document.getElementById('checkOut').value = b.checkOut || '';
+  document.getElementById('roomType').value = b.roomType || 'غرفة قياسية';
+  document.getElementById('mealPlan').value = b.mealPlan || 'بدون وجبات';
+  document.getElementById('hotelBookingRef').value = b.hotelBookingRef || '';
+  document.getElementById('basePrice').value = b.basePrice || 0;
+  document.getElementById('paidAmount').value = b.paidAmount || 0;
+  document.getElementById('notes').value = b.notes || '';
+  setServices(b.services || []);
+  updateTotals();
+  showTab('add');
+}
+
+function clearForm() {
+  ['clientName', 'clientPhone', 'clientEmail', 'city', 'departureDate', 'returnDate', 'hotelName', 'hotelArea', 'checkIn', 'checkOut', 'hotelBookingRef', 'basePrice', 'paidAmount', 'notes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('travelers').value = '2';
+  document.getElementById('country').value = '';
+  document.getElementById('agentName').value = '';
+  document.getElementById('servicesContainer') && (document.getElementById('servicesContainer').innerHTML = '');
+  addService();
+  updateTotals();
+  currentEditId = null;
+}
+
+// ==================== تأكيد وإلغاء ====================
+function openConfirmModal(id) {
+  const b = bookings.find(b => b.id === id);
+  if (!b) return;
+  currentActionId = id;
+  document.getElementById('confirmInfo').innerHTML = `<p><strong>${b.clientName}</strong></p><p>💰 ${b.totalPrice} JD | 💵 المدفوع: ${b.paidAmount} JD</p>`;
+  document.getElementById('confirmModal').classList.add('open');
+}
+
+function confirmBooking() {
+  const b = bookings.find(b => b.id === currentActionId);
+  if (!b) return;
+  b.isConfirmed = true;
+  saveAllData();
+  closeConfirmModal();
+  renderAll();
+  alert('✅ تم تأكيد الحجز');
+}
+
+function openCancelModal(id) {
+  const b = bookings.find(b => b.id === id);
+  if (!b) return;
+  currentActionId = id;
+  document.getElementById('cancelInfo').innerHTML = `<p><strong>${b.clientName}</strong></p><p>💰 ${b.totalPrice} JD</p>`;
+  document.getElementById('cancelModal').classList.add('open');
+}
+
+function confirmCancel() {
+  const b = bookings.find(b => b.id === currentActionId);
+  if (!b) return;
+  const reason = document.getElementById('cancelReason').value;
+  cancelledBookings.push({ ...b, reason: reason, cancelledAt: Date.now() });
+  bookings = bookings.filter(b => b.id !== currentActionId);
+  saveAllData();
+  closeCancelModal();
+  renderAll();
+  alert('✅ تم إلغاء الحجز');
+}
+
+function closeConfirmModal() { document.getElementById('confirmModal').classList.remove('open'); }
+function closeCancelModal() { document.getElementById('cancelModal').classList.remove('open'); }
+
+// ==================== Dashboard ====================
+function updateDashboard() {
+  const total = bookings.length;
+  const revenue = bookings.reduce((s, b) => s + (b.totalPrice || 0), 0);
+  const paid = bookings.reduce((s, b) => s + (b.paidAmount || 0), 0);
+  const cancelled = cancelledBookings.length;
+  const confirmed = bookings.filter(b => b.isConfirmed).length;
+  
+  document.getElementById('dashboardStats').innerHTML = `
+    <div class="stat-card"><div class="value">${total}</div><div class="label">إجمالي الحجوزات</div></div>
+    <div class="stat-card"><div class="value">${Math.round(revenue).toLocaleString()} JD</div><div class="label">الإيرادات</div></div>
+    <div class="stat-card"><div class="value">${Math.round(paid).toLocaleString()} JD</div><div class="label">المدفوع</div></div>
+    <div class="stat-card"><div class="value">${confirmed}</div><div class="label">مؤكدة</div></div>
+    <div class="stat-card"><div class="value">${cancelled}</div><div class="label">ملغية</div></div>
+  `;
+  
+  const monthly = {};
+  bookings.forEach(b => {
+    const d = new Date(b.createdAt);
+    const m = `${d.getFullYear()}-${d.getMonth() + 1}`;
+    monthly[m] = (monthly[m] || 0) + (b.totalPrice || 0);
+  });
+  const months = Object.keys(monthly).sort().slice(-6);
+  const revData = months.map(m => monthly[m]);
+  if (charts.revenueChart) charts.revenueChart.destroy();
+  charts.revenueChart = new Chart(document.getElementById('revenueChart'), {
+    type: 'line', data: { labels: months, datasets: [{ label: 'الإيرادات (JD)', data: revData, borderColor: '#059669', fill: true }] }
+  });
+  
+  const dest = {};
+  bookings.forEach(b => { dest[b.country] = (dest[b.country] || 0) + 1; });
+  if (charts.destinationsChart) charts.destinationsChart.destroy();
+  charts.destinationsChart = new Chart(document.getElementById('destinationsChart'), {
+    type: 'pie', data: { labels: Object.keys(dest), datasets: [{ data: Object.values(dest), backgroundColor: ['#059669', '#3b82f6', '#f59e0b', '#dc2626'] }] }
+  });
+  
+  const agents = {};
+  bookings.forEach(b => {
+    if (b.agentName) {
+      const name = getEmployeeName(b.agentName);
+      agents[name] = (agents[name] || 0) + (b.totalPrice || 0);
+    }
+  });
+  if (charts.agentsChart) charts.agentsChart.destroy();
+  charts.agentsChart = new Chart(document.getElementById('agentsChart'), {
+    type: 'bar', data: { labels: Object.keys(agents), datasets: [{ label: 'المبيعات (JD)', data: Object.values(agents), backgroundColor: '#3b82f6' }] }
+  });
+  
+  if (charts.conversionChart) charts.conversionChart.destroy();
+  charts.conversionChart = new Chart(document.getElementById('conversionChart'), {
+    type: 'doughnut', data: { labels: ['ناجحة', 'ملغية'], datasets: [{ data: [bookings.length, cancelledBookings.length], backgroundColor: ['#059669', '#dc2626'] }] }
+  });
+}
+
+// ==================== التقارير والتصدير ====================
+function generateReport() {
+  const start = document.getElementById('reportStart').value;
+  const end = document.getElementById('reportEnd').value;
+  let filtered = [...bookings];
+  if (start) filtered = filtered.filter(b => b.departureDate >= start);
+  if (end) filtered = filtered.filter(b => b.departureDate <= end);
+  const totalRev = filtered.reduce((s, b) => s + (b.totalPrice || 0), 0);
+  let html = `<div style="text-align:center"><h3>التقرير المالي</h3><p>الفترة: ${start || 'بداية'} - ${end || 'الحالي'}</p><p>تاريخ: ${new Date().toLocaleDateString('ar-JO')}</p></div>
+    <table style="width:100%;border-collapse:collapse;margin-top:15px"><tr style="background:#f1f5f9"><th style="padding:10px">العميل</th><th style="padding:10px">الوجهة</th><th style="padding:10px">التاريخ</th><th style="padding:10px">القيمة</th><th style="padding:10px">الموظف</th></td>
+    ${filtered.map(b => `<tr><td style="padding:8px">${b.clientName}</td><td style="padding:8px">${b.country}</td><td style="padding:8px">${b.departureDate || '—'}<tr><td style="padding:8px">${Math.round(b.totalPrice).toLocaleString()} JD</td><td style="padding:8px">${getEmployeeName(b.agentName)}</td></tr>`).join('')}
+    </table><div style="margin-top:15px;padding:10px;background:#f1f5f9"><strong>الإجمالي: ${Math.round(totalRev).toLocaleString()} JD</strong></div>`;
+  document.getElementById('reportPreview').style.display = 'block';
+  document.getElementById('reportPreview').innerHTML = html;
+}
+
+function printReport() { generateReport(); setTimeout(() => window.print(), 100); }
+
+function exportToExcel() {
+  if (!bookings.length) { alert('لا توجد بيانات'); return; }
+  const ws = XLSX.utils.json_to_sheet(bookings.map(b => ({
+    'العميل': b.clientName, 'الهاتف': b.clientPhone, 'البريد': b.clientEmail, 'الدولة': b.country,
+    'المدينة': b.city, 'تاريخ المغادرة': b.departureDate, 'تاريخ العودة': b.returnDate,
+    'عدد المسافرين': b.travelers, 'الفندق': b.hotelName, 'الخدمات': b.services?.map(s => s.name).join(', ') || '',
+    'الإجمالي': b.totalPrice, 'المدفوع': b.paidAmount, 'الحالة': b.isConfirmed ? 'مؤكد' : 'قيد الانتظار',
+    'الموظف': getEmployeeName(b.agentName), 'ملاحظات': b.notes
+  })));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'الحجوزات');
+  XLSX.writeFile(wb, `حجوزات_${new Date().toISOString().split('T')[0]}.xlsx`);
+  alert('تم التصدير');
+}
+
+function exportCancelledToExcel() {
+  if (!cancelledBookings.length) { alert('لا توجد بيانات'); return; }
+  const ws = XLSX.utils.json_to_sheet(cancelledBookings.map(c => ({
+    'العميل': c.clientName, 'الدولة': c.country, 'تاريخ السفر': c.departureDate,
+    'الإجمالي': c.totalPrice, 'المدفوع': c.paidAmount, 'سبب الإلغاء': c.reason
+  })));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'الملغية');
+  XLSX.writeFile(wb, `ملغية_${new Date().toISOString().split('T')[0]}.xlsx`);
+  alert('تم التصدير');
+}
+
+function exportJSON() {
+  const data = { bookings, cancelledBookings, users };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `سفر_pro_${new Date().toISOString().split('T')[0]}.json`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
+function importJSON(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.bookings) bookings = data.bookings;
+      if (data.cancelledBookings) cancelledBookings = data.cancelledBookings;
+      if (data.users && currentUser?.role === 'admin') users = data.users;
+      saveAllData();
+      renderAll();
+      alert('تم استيراد البيانات');
+    } catch (err) { alert('خطأ في الملف'); }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ==================== دوال عامة ====================
+function renderAll() {
+  renderBookings();
+  renderCancelled();
+  renderClients();
+  updateDashboard();
+  renderUsersList();
+  updateEmployeeSelect();
+  renderTripDocs();
+}
+
+function showTab(tab) {
+  const tabs = ['dashboard', 'bookings', 'cancelled', 'clients', 'add', 'reports', 'trips', 'users'];
+  tabs.forEach(t => {
+    const el = document.getElementById(`tab-${t}`);
+    if (el) el.style.display = t === tab ? '' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach((el, i) => el.classList.toggle('active', tabs[i] === tab));
+  if (tab === 'dashboard') updateDashboard();
+  if (tab === 'bookings') renderBookings();
+  if (tab === 'cancelled') renderCancelled();
+  if (tab === 'clients') renderClients();
+  if (tab === 'users') renderUsersList();
+  if (tab === 'trips') renderTripDocs();
+}
+
+document.getElementById('topbar-date').innerHTML = new Date().toLocaleDateString('ar-JO');
+
+// ==================== برنامج الرحلات ====================
+function renderTripDocs() {
+  const grid = document.getElementById('tripsGrid');
+  const uploadCard = document.getElementById('tripsUploadCard');
+  if (!grid) return;
+  if (uploadCard) uploadCard.style.display = currentUser?.role === 'admin' ? '' : 'none';
+
+  if (!tripDocs.length) {
+    grid.innerHTML = '<div class="empty"><i class="ti ti-files" style="font-size:40px;display:block;margin-bottom:10px"></i>لا توجد برامج رحلات بعد</div>';
+    return;
+  }
+  grid.innerHTML = tripDocs.map((doc, idx) => `
+    <div class="trip-card">
+      <div>
+        <div class="trip-card-title">📄 ${doc.title}</div>
+        ${doc.desc ? `<div style="font-size:12px;color:#64748b;margin-top:4px">${doc.desc}</div>` : ''}
+        <div class="trip-card-date">📅 ${new Date(doc.uploadedAt).toLocaleDateString('ar-JO')} | بواسطة: ${doc.uploadedBy || 'المدير'}</div>
+      </div>
+      <button class="trip-pdf-btn" onclick="openTripDoc(${idx})"><i class="ti ti-eye"></i> عرض البرنامج</button>
+      ${currentUser?.role === 'admin' ? `<button class="btn btn-red" style="font-size:12px;padding:5px 14px" onclick="deleteTripDoc(${idx})">🗑️ حذف</button>` : ''}
+    </div>
+  `).join('');
+}
+
+function openTripDoc(idx) {
+  const doc = tripDocs[idx];
+  if (!doc || !doc.data) { alert('الملف غير متاح'); return; }
+  const byteChars = atob(doc.data);
+  const byteArr = new Uint8Array(byteChars.length);
+  for (let i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i);
+  const blob = new Blob([byteArr], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+function deleteTripDoc(idx) {
+  if (currentUser?.role !== 'admin') return;
+  if (!confirm('هل تريد حذف هذا البرنامج؟')) return;
+  tripDocs.splice(idx, 1);
+  saveAllData();
+  renderTripDocs();
+}
+
+function handleTripFileSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { alert('الملف أكبر من 5 ميجابايت'); input.value = ''; return; }
+  if (file.type !== 'application/pdf') { alert('يجب أن يكون الملف بصيغة PDF'); input.value = ''; return; }
+  selectedTripFile = file;
+  document.getElementById('uploadZone').innerHTML = `<i class="ti ti-check" style="font-size:40px;margin-bottom:10px;color:#059669"></i><div style="color:#059669;font-weight:600">${file.name}</div><div style="font-size:11px;margin-top:5px">${(file.size/1024).toFixed(0)} KB</div>`;
+}
+
+async function uploadTripDoc() {
+  if (!selectedTripFile) { alert('اختر ملف PDF أولاً'); return; }
+  const title = document.getElementById('tripDocTitle').value.trim();
+  if (!title) { alert('أدخل عنوان البرنامج'); return; }
+  const desc = document.getElementById('tripDocDesc').value.trim();
+
+  document.getElementById('uploadProgress').style.display = '';
+  document.getElementById('uploadBar').style.width = '30%';
+  document.getElementById('uploadMsg').textContent = 'جاري تحويل الملف...';
+
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const base64 = e.target.result.split(',')[1];
+    document.getElementById('uploadBar').style.width = '70%';
+    document.getElementById('uploadMsg').textContent = 'جاري الرفع...';
+
+    tripDocs.unshift({
+      id: Date.now().toString(),
+      title,
+      desc,
+      data: base64,
+      fileName: selectedTripFile.name,
+      uploadedAt: Date.now(),
+      uploadedBy: currentUser?.fullName || 'المدير'
+    });
+
+    await saveAllData();
+    document.getElementById('uploadBar').style.width = '100%';
+    document.getElementById('uploadMsg').textContent = '✅ تم الرفع بنجاح!';
+    setTimeout(() => {
+      document.getElementById('uploadProgress').style.display = 'none';
+      document.getElementById('uploadBar').style.width = '0%';
+      document.getElementById('tripDocTitle').value = '';
+      document.getElementById('tripDocDesc').value = '';
+      document.getElementById('tripFileInput').value = '';
+      document.getElementById('uploadZone').innerHTML = `<i class="ti ti-file-type-pdf" style="font-size:40px;margin-bottom:10px"></i><div>اضغط لاختيار ملف PDF</div><div style="font-size:11px;margin-top:5px">الحد الأقصى: 5 ميجابايت</div>`;
+      selectedTripFile = null;
+      renderTripDocs();
+    }, 1500);
+  };
+  reader.readAsDataURL(selectedTripFile);
+}
+
+// ==================== بدء التشغيل ====================
+(async () => {
+  await loadAllData();
+  addService();
+
+  const session = localStorage.getItem('current_session');
+  if (session) {
+    const s = JSON.parse(session);
+    const u = users.find(u => u.username === s.username);
+    if (u) {
+      currentUser = u;
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'block';
+      document.getElementById('currentUserName').innerHTML = u.fullName;
+      renderAll();
+      updateEmployeeSelect();
+    } else {
+      localStorage.removeItem('current_session');
+    }
+  }
+})();
+</script>
+</body>
+</html>
