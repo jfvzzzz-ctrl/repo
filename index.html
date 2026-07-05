@@ -8,6 +8,42 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <script>
+const GS_URL = 'https://script.google.com/macros/s/AKfycby-yVeAng9muQDv59TpvFzLNVIop_w8xb_iYLncSRl81-sHxurGF9ZN1w5h5zAJg_2_bw/exec';
+
+async function confirmBooking(id) {
+  const res = await fetch(GS_URL + '?action=confirmBooking&bookingId=' + id);
+  const result = await res.json();
+  alert(result.success ? "تم تأكيد الحجز" : "خطأ: " + result.error);
+}
+
+async function cancelBooking(id) {
+  const res = await fetch(GS_URL + '?action=cancelBooking&bookingId=' + id);
+  const result = await res.json();
+  alert(result.success ? "تم إلغاء الحجز" : "خطأ: " + result.error);
+}
+
+async function uploadFile(file) {
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    const base64Data = btoa(
+      new Uint8Array(e.target.result).reduce((data, byte) => data + String.fromCharCode(byte), '')
+    );
+    const response = await fetch(GS_URL, {
+      method: "POST",
+      body: new URLSearchParams({
+        action: "uploadFile",
+        fileName: file.name,
+        mimeType: file.type,
+        fileData: base64Data
+      })
+    });
+    const result = await response.json();
+    alert("تم رفع الملف: " + result.fileUrl);
+  };
+  reader.readAsArrayBuffer(file);
+}
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
