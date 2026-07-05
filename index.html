@@ -285,90 +285,145 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
 // ==================== دوال التشفير ====================
 function hashPassword(pwd) { return CryptoJS.SHA256(pwd).toString(); }
 
-// ==================== إعدادات Google Sheets ====================
-const GS_URL = 'https://script.google.com/macros/s/AKfycby-yVeAng9muQDv59TpvFzLNVIop_w8xb_iYLncSRl81-sHxurGF9ZN1w5h5zAJg_2_bw/exec';
-let syncTimeout = null;
-let lastSyncTime = null;
+// ==================== إعدادات Google Sheets و Google Drive ====================
+const SHEET_ID = '1NFZq5WQoiJmYoVXlZ6v0zVH6eW_Vk3TfxV_avEdqxU8'; // ID الشيت
+const DRIVE_FOLDER_ID = '11q3xQ2UJKweRBaAWZnPtj5ZrJ21q2tDm'; // ID المجلد في Google Drive
 
-function setSyncStatus(status, text) {
-  const dot = document.getElementById('syncDot');
-  const label = document.getElementById('syncText');
-  if (!dot || !label) return;
-  dot.className = 'sync-dot ' + status;
-  label.textContent = text;
+function doGet(e) {
+  return handleRequest(e);
 }
 
-async function loadFromSheets() {
-  setSyncStatus('syncing', 'جاري التحميل...');
+function doPost(e) {
+  return handleRequest(e);
+}
+
+function handleRequest(e) {
+  const params = e.parameter;
+  const action = params.action;
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+
+  let result = {};
+
   try {
-    const res = await fetch(GS_URL + '?action=read&t=' + Date.now());
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-
-    if (data.users && data.users.length > 0) users = data.users;
-    else if (!users.length) users = [{ username: "admin", passwordHash: hashPassword("admin123"), role: "admin", fullName: "مدير النظام" }];
-
-    bookings = data.bookings || [];
-    cancelledBookings = data.cancelled || [];
-    tripDocs = data.trips || [];
-
-    // حفظ نسخة محلية احتياطية
-    localStorage.setItem('travel_users', JSON.stringify(users));
-    localStorage.setItem('travel_bookings', JSON.stringify(bookings));
-    localStorage.setItem('travel_cancelled', JSON.stringify(cancelledBookings));
-    localStorage.setItem('travel_trips', JSON.stringify(tripDocs));
-
-    setSyncStatus('ok', 'متصل ✓');
-    lastSyncTime = Date.now();
-    return true;
-  } catch (e) {
-    setSyncStatus('error', 'خطأ في الاتصال');
-    // استخدام البيانات المحلية كاحتياطية
-    loadFromLocal();
-    return false;
+    if (action === 'read') {
+      result = readAllData(ss);
+    } else if (action === 'write') {
+      const data = JSON.parse(params.data);
+      writeAllData(ss, data);
+      result = { success: true };
+    } else if (action === 'uploadFile') {
+      result = uploadFile(params);
+    } else if (action === 'confirmBooking') {
+      result = confirmBooking(ss, params.bookingId);
+    } else if (action === 'cancelBooking') {
+      result = cancelBooking(ss, params.bookingId);
+    } else if (action === 'ping') {
+      result = { status: 'ok', time: new Date().toISOString() };
+    }
+  } catch (err) {
+    result = { error: err.message };
   }
+
+  return ContentService
+    .createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
-async function saveToSheets() {
-  setSyncStatus('syncing', 'جاري الحفظ...');
-  // حفظ محلي فوري
-  localStorage.setItem('travel_users', JSON.stringify(users));
-  localStorage.setItem('travel_bookings', JSON.stringify(bookings));
-  localStorage.setItem('travel_cancelled', JSON.stringify(cancelledBookings));
-  localStorage.setItem('travel_trips', JSON.stringify(tripDocs));
-  try {
-    const payload = { bookings, cancelled: cancelledBookings, users, trips: tripDocs };
-    const res = await fetch(GS_URL + '?action=write&data=' + encodeURIComponent(JSON.stringify(payload)));
-    const result = await res.json();
-    if (result.error) throw new Error(result.error);
-    setSyncStatus('ok', 'تم الحفظ ✓');
-    lastSyncTime = Date.now();
-  } catch (e) {
-    setSyncStatus('error', 'حُفظ محلياً فقط');
+// ==================== قراءة وكتابة البيانات ====================
+function readAllData(ss) {
+  const bookings = sheetToArray(ss, 'bookings');
+  const cancelled = sheetToArray(ss, 'cancelled');
+  const users = sheetToArray(ss, 'users');
+  const trips = sheetToArray(ss, 'trips');
+  return { bookings, cancelled, users, trips };
+}
+
+function writeAllData(ss, data) {
+  if (data.bookings !== undefined) arrayToSheet(ss, 'bookings', data.bookings);
+  if (data.cancelled !== undefined) arrayToSheet(ss, 'cancelled', data.cancelled);
+  if (data.users !== undefined) arrayToSheet(ss, 'users', data.users);
+  if (data.trips !== undefined) arrayToSheet(ss, 'trips', data.trips);
+}
+
+function sheetToArray(ss, name) {
+  let sheet = ss.getSheetByName(name);
+  if (!sheet) return [];
+  const rows = sheet.getDataRange().getValues();
+  if (rows.length < 2) return [];
+  const headers = rows[0];
+  return rows.slice(1).map(row => {
+    const obj = {};
+    headers.forEach((h, i) => {
+      try { obj[h] = JSON.parse(row[i]); }
+      catch { obj[h] = row[i]; }
+    });
+    return obj;
+  });
+}
+
+function arrayToSheet(ss, name, arr) {
+  let sheet = ss.getSheetByName(name);
+  if (!sheet) sheet = ss.insertSheet(name);
+  if (!arr || arr.length === 0) return;
+
+  const headers = Object.keys(arr[0]);
+  sheet.clearContents();
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+
+  const rows = arr.map(obj => headers.map(h => {
+    const v = obj[h];
+    return (typeof v === 'object') ? JSON.stringify(v) : (v ?? '');
+  }));
+  sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+}
+
+// ==================== رفع الملفات ====================
+function uploadFile(params) {
+  const fileContent = Utilities.base64Decode(params.fileData);
+  const blob = Utilities.newBlob(fileContent, params.mimeType, params.fileName);
+  const folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
+  const file = folder.createFile(blob);
+  return { success: true, fileId: file.getId(), fileUrl: file.getUrl() };
+}
+
+// ==================== تأكيد وإلغاء الحجز ====================
+function confirmBooking(ss, bookingId) {
+  const sheet = ss.getSheetByName('bookings');
+  if (!sheet) return { error: "Bookings sheet not found" };
+
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+  const idIndex = headers.indexOf("id");
+  const statusIndex = headers.indexOf("status");
+
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][idIndex] == bookingId) {
+      sheet.getRange(i+1, statusIndex+1).setValue("confirmed");
+      return { success: true, message: "Booking confirmed" };
+    }
   }
+  return { error: "Booking not found" };
 }
 
-function loadFromLocal() {
-  const su = localStorage.getItem('travel_users');
-  if (su) users = JSON.parse(su);
-  else users = [{ username: "admin", passwordHash: hashPassword("admin123"), role: "admin", fullName: "مدير النظام" }];
-  const sb = localStorage.getItem('travel_bookings');
-  if (sb) bookings = JSON.parse(sb);
-  const sc = localStorage.getItem('travel_cancelled');
-  if (sc) cancelledBookings = JSON.parse(sc);
-  const st = localStorage.getItem('travel_trips');
-  if (st) tripDocs = JSON.parse(st);
+function cancelBooking(ss, bookingId) {
+  const bookingsSheet = ss.getSheetByName('bookings');
+  const cancelledSheet = ss.getSheetByName('cancelled');
+  if (!bookingsSheet || !cancelledSheet) return { error: "Sheets not found" };
+
+  const data = bookingsSheet.getDataRange().getValues();
+  const headers = data[0];
+  const idIndex = headers.indexOf("id");
+
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][idIndex] == bookingId) {
+      cancelledSheet.appendRow(data[i]);
+      bookingsSheet.deleteRow(i+1);
+      return { success: true, message: "Booking cancelled" };
+    }
+  }
+  return { error: "Booking not found" };
 }
 
-function saveAllData() { saveToSheets(); }
-
-async function loadAllData() {
-  loadFromLocal(); // تحميل فوري من المحلي
-  await loadFromSheets(); // ثم تحديث من السيرفر
-}
-
-// مزامنة دورية كل 30 ثانية
-setInterval(() => { if (currentUser) loadFromSheets().then(() => { renderAll(); renderTripDocs(); }); }, 30000);
 
 // ==================== البيانات الأساسية ====================
 let users = [];
