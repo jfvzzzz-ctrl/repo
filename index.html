@@ -285,7 +285,8 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
 // ==================== دوال التشفير ====================
 function hashPassword(pwd) { return CryptoJS.SHA256(pwd).toString(); }
 
-// ==================== إعدادات Google Sheets و Google Drive ====================
+
+  // ==================== إعدادات Google Sheets و Google Drive ====================
 const SHEET_ID = '1NFZq5WQoiJmYoVXlZ6v0zVH6eW_Vk3TfxV_avEdqxU8'; // ID الشيت
 const DRIVE_FOLDER_ID = '11q3xQ2UJKweRBaAWZnPtj5ZrJ21q2tDm'; // ID المجلد في Google Drive
 
@@ -301,7 +302,6 @@ function handleRequest(e) {
   const params = e.parameter;
   const action = params.action;
   const ss = SpreadsheetApp.openById(SHEET_ID);
-
   let result = {};
 
   try {
@@ -324,8 +324,7 @@ function handleRequest(e) {
     result = { error: err.message };
   }
 
-  return ContentService
-    .createTextOutput(JSON.stringify(result))
+  return ContentService.createTextOutput(JSON.stringify(result))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
@@ -423,7 +422,6 @@ function cancelBooking(ss, bookingId) {
   }
   return { error: "Booking not found" };
 }
-
 
 // ==================== البيانات الأساسية ====================
 let users = [];
