@@ -473,30 +473,71 @@ let selectedTripFile = null;
 const availableServices = ["🚗 نقل مطار", "📱 شريحة اتصال", "🗺️ جولة سياحية"];
 
 // ==================== تسجيل الدخول ====================
-function login() {
-  const username = document.getElementById('loginUsername').value.trim();
-  const password = document.getElementById('loginPassword').value;
-  const user = users.find(u => u.username === username && u.passwordHash === hashPassword(password));
-  if (user) {
-    currentUser = user;
-    localStorage.setItem('current_session', JSON.stringify({ username: user.username }));
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('mainApp').style.display = 'block';
-    document.getElementById('currentUserName').innerHTML = user.fullName;
-    updateEmployeeSelect();
-    renderAll();
-  } else {
-    document.getElementById('loginError').style.display = 'block';
-    document.getElementById('loginError').innerHTML = 'بيانات دخول غير صحيحة';
-  }
-}
 
-function logout() {
-  currentUser = null;
-  localStorage.removeItem('current_session');
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('mainApp').style.display = 'none';
-}
+  <!-- شاشة الدخول -->
+  <div id="loginScreen">
+    <h2>تسجيل الدخول</h2>
+    <form onsubmit="login(event)">
+      <input type="text" id="loginUsername" placeholder="اسم المستخدم" required><br><br>
+      <input type="password" id="loginPassword" placeholder="كلمة السر" required><br><br>
+      <button type="submit">دخول</button>
+    </form>
+    <div id="loginError" style="display:none;"></div>
+  </div>
+
+  <!-- التطبيق بعد الدخول -->
+  <div id="mainApp">
+    <h2>مرحباً <span id="currentUserName"></span></h2>
+    <button onclick="logout()">تسجيل الخروج</button>
+    <hr>
+    <div id="appContent">هنا محتوى التطبيق بعد الدخول</div>
+  </div>
+
+  <script>
+const GS_URL = 'https://script.google.com/macros/s/AKfycby-yVeAng9muQDv59TpvFzLNVIop_w8xb_iYLncSRl81-sHxurGF9ZN1w5h5zAJg_2_bw/exec';
+    let currentUser = null;
+    let users = [];
+
+    // دالة التشفير
+    async function hashPassword(password) {
+      const msgUint8 = new TextEncoder().encode(password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // تسجيل الدخول
+    async function login(event) {
+      event.preventDefault();
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const passwordHash = await hashPassword(password);
+
+      const res = await fetch(GS_URL + '?action=read');
+      const data = await res.json();
+      users = data.users;
+
+      const user = users.find(u => u.username === username && u.passwordHash === passwordHash);
+      if (user) {
+        currentUser = user;
+        localStorage.setItem('current_session', JSON.stringify({ username: user.username }));
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        document.getElementById('currentUserName').innerHTML = user.fullName;
+      } else {
+        document.getElementById('loginError').style.display = 'block';
+        document.getElementById('loginError').innerHTML = 'بيانات دخول غير صحيحة';
+      }
+    }
+
+    // تسجيل الخروج
+    function logout() {
+      currentUser = null;
+      localStorage.removeItem('current_session');
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('mainApp').style.display = 'none';
+    }
+  </script>
 
 // ==================== إدارة الموظفين ====================
 function updateEmployeeSelect() {
