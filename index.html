@@ -499,7 +499,7 @@ const GS_URL = 'https://script.google.com/macros/s/AKfycby-yVeAng9muQDv59TpvFzLN
 let currentUser = null;
 let users = [];
 
-// ==================== دالة التشفير ====================
+/ ==================== دالة التشفير ====================
 async function hashPassword(password) {
   const msgUint8 = new TextEncoder().encode(password);
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
@@ -511,25 +511,43 @@ async function hashPassword(password) {
 async function login() {
   const username = document.getElementById('loginUsername').value.trim();
   const password = document.getElementById('loginPassword').value;
+  const errorBox = document.getElementById('loginError');
+
+  if (!username || !password) {
+    errorBox.style.display = 'block';
+    errorBox.textContent = '❌ الرجاء إدخال اسم المستخدم وكلمة المرور';
+    return;
+  }
+
   const passwordHash = await hashPassword(password);
 
-  // استدعاء بيانات المستخدمين من Google Sheets عبر WebApp
-  const res = await fetch(GS_URL + '?action=read');
-  const data = await res.json();
-  users = data.users || [];
+  try {
+    // استدعاء بيانات المستخدمين من Google Sheets عبر WebApp
+    const res = await fetch(GS_URL + '?action=users'); // استخدم action=users بدل read
+    const data = await res.json();
+    users = data.users || [];
 
-  // تحقق من المستخدم
-  const user = users.find(u => u.username === username && u.passwordHash === passwordHash);
-  if (user) {
-    currentUser = user;
-    localStorage.setItem('current_session', JSON.stringify(user));
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('mainApp').style.display = 'block';
-    document.getElementById('currentUserName').innerHTML = user.fullName;
-    renderAll(); // استدعاء دالة عرض البيانات
-  } else {
-    document.getElementById('loginError').style.display = 'block';
-    document.getElementById('loginError').innerHTML = '❌ اسم المستخدم أو كلمة السر غير صحيحة';
+    // تحقق من المستخدم
+    const user = users.find(u => u.username === username && u.passwordHash === passwordHash);
+
+    if (user) {
+      currentUser = user;
+      localStorage.setItem('current_session', JSON.stringify(user));
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'block';
+      document.getElementById('currentUserName').textContent = user.fullName;
+      if (typeof renderAll === 'function') {
+        renderAll(); // استدعاء دالة عرض البيانات إذا كانت معرفة
+      }
+      errorBox.style.display = 'none';
+    } else {
+      errorBox.style.display = 'block';
+      errorBox.textContent = '❌ اسم المستخدم أو كلمة السر غير صحيحة';
+    }
+  } catch (err) {
+    errorBox.style.display = 'block';
+    errorBox.textContent = '⚠️ خطأ في الاتصال بالخادم';
+    console.error(err);
   }
 }
   
