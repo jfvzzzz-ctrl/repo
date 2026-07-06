@@ -317,10 +317,29 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
 <div class="modal-bg" id="confirmModal"><div class="modal"><div class="card-title">تأكيد الحجز</div><div id="confirmInfo"></div><div class="btn-row"><button onclick="closeConfirmModal()">إلغاء</button><button class="btn-green" onclick="confirmBooking()">تأكيد</button></div></div></div>
 <div class="modal-bg" id="cancelModal"><div class="modal"><div class="card-title">إلغاء الحجز</div><div id="cancelInfo"></div><div class="fg"><label>سبب الإلغاء</label><select id="cancelReason"><option>السعر مرتفع</option><option>تاريخ غير مناسب</option><option>العميل طلب الإلغاء</option><option>لم يرد على الاتصال</option></select></div><div class="btn-row"><button onclick="closeCancelModal()">إلغاء</button><button class="btn-red" onclick="confirmCancel()">تأكيد</button></div></div></div>
 
-  
+<!-- شاشة الدخول -->
+  <div id="loginScreen">
+    <h2>تسجيل الدخول</h2>
+    <form onsubmit="login(event)">
+      <input type="text" id="loginUsername" placeholder="اسم المستخدم" required><br><br>
+      <input type="password" id="loginPassword" placeholder="كلمة السر" required><br><br>
+      <button type="submit">دخول</button>
+    </form>
+    <div id="loginError" style="display:none;"></div>
+  </div>
+
+  <!-- التطبيق بعد الدخول -->
+  <div id="mainApp">
+    <h2>مرحباً <span id="currentUserName"></span></h2>
+    <button onclick="logout()">تسجيل الخروج</button>
+    <hr>
+    <div id="appContent">هنا محتوى التطبيق بعد الدخول</div>
+  </div>
+    
+
 // ==================== دوال التشفير ====================
   
-  <script
+<script
 
 function hashPassword(pwd) { return CryptoJS.SHA256(pwd).toString(); }
 
@@ -476,31 +495,11 @@ const availableServices = ["🚗 نقل مطار", "📱 شريحة اتصال",
 
 // ==================== تسجيل الدخول ====================
 
-  <!-- شاشة الدخول -->
-  <div id="loginScreen">
-    <h2>تسجيل الدخول</h2>
-    <form onsubmit="login(event)">
-      <input type="text" id="loginUsername" placeholder="اسم المستخدم" required><br><br>
-      <input type="password" id="loginPassword" placeholder="كلمة السر" required><br><br>
-      <button type="submit">دخول</button>
-    </form>
-    <div id="loginError" style="display:none;"></div>
-  </div>
-
-  <!-- التطبيق بعد الدخول -->
-  <div id="mainApp">
-    <h2>مرحباً <span id="currentUserName"></span></h2>
-    <button onclick="logout()">تسجيل الخروج</button>
-    <hr>
-    <div id="appContent">هنا محتوى التطبيق بعد الدخول</div>
-  </div>
-
-  <script>
 const GS_URL = 'https://script.google.com/macros/s/AKfycby-yVeAng9muQDv59TpvFzLNVIop_w8xb_iYLncSRl81-sHxurGF9ZN1w5h5zAJg_2_bw/exec';
     let currentUser = null;
     let users = [];
 
-    // دالة التشفير
+  // دالة التشفير
     async function hashPassword(password) {
       const msgUint8 = new TextEncoder().encode(password);
       const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
@@ -539,11 +538,10 @@ const GS_URL = 'https://script.google.com/macros/s/AKfycby-yVeAng9muQDv59TpvFzLN
       document.getElementById('loginScreen').style.display = 'flex';
       document.getElementById('mainApp').style.display = 'none';
     }
-  </script>
 
 // ==================== إدارة الموظفين ====================
-    <script
-function updateEmployeeSelect() {
+
+  function updateEmployeeSelect() {
   const select = document.getElementById('agentName');
   const filter = document.getElementById('agentFilter');
   const employees = users.filter(u => u.role === 'employee' || u.role === 'admin');
