@@ -1099,23 +1099,48 @@ async function uploadTripDoc() {
 }
 
 // ==================== بدء التشغيل ====================
-(async () => {
-  await loadAllData();
-  addService();
+<script>
+  let users = [];
+  let bookings = [];
+  let cancelled = [];
+  let trips = [];
+  let currentUser = null;
 
-  const session = localStorage.getItem('current_session');
-  if (session) {
-    const s = JSON.parse(session);
-    const u = users.find(u => u.username === s.username);
-    if (u) {
-      currentUser = u;
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('mainApp').style.display = 'block';
-      document.getElementById('currentUserName').innerHTML = u.fullName;
-      renderAll();
-      updateEmployeeSelect();
-    } else {
-      localStorage.removeItem('current_session');
+  async function loadAllData() {
+    try {
+      const res = await fetch(GS_URL + "?action=read");
+      const data = await res.json();
+      users = data.users || [];
+      bookings = data.bookings || [];
+      cancelled = data.cancelled || [];
+      trips = data.trips || [];
+      console.log("✅ تم تحميل البيانات:", data);
+    } catch (err) {
+      console.error("❌ خطأ في تحميل البيانات:", err);
+    }
+  }
+
+  // ==================== بدء التشغيل ====================
+  (async () => {
+    await loadAllData();
+
+    // إذا عندك دالة addService عرفها هنا، أو احذف السطر
+    // addService();
+
+    const session = localStorage.getItem('current_session');
+    if (session) {
+      const s = JSON.parse(session);
+      const u = users.find(u => u.username === s.username);
+      if (u) {
+        currentUser = u;
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        document.getElementById('currentUserName').innerHTML = u.fullName;
+        // هذه دوال أخرى يجب أن تكون معرفة مسبقًا
+        renderAll();
+        updateEmployeeSelect();
+      } else {
+        localStorage.removeItem('current_session');
     }
   }
 })();
