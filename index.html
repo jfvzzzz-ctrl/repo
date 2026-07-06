@@ -146,17 +146,18 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
 </div>
 
 <!-- الواجهة الرئيسية -->
-<div id="mainApp" style="display:none">
-<div class="topbar">
-  <div class="topbar-title"><i class="ti ti-plane-tilt"></i> Dream Travel <span class="topbar-badge">KSA</span></div>
-  <div style="display:flex;align-items:center;gap:15px">
-    <div class="sync-indicator"><div class="sync-dot" id="syncDot"></div><span id="syncText">جاري الاتصال...</span></div>
-    <div class="topbar-user"><i class="ti ti-user"></i><span id="currentUserName"></span></div>
-    <div id="topbar-date" style="font-size:13px"></div>
-    <button class="logout-btn" onclick="logout()">خروج</button>
-  </div>
+<div id="loginScreen" class="login-container">
+  <div class="login-box">
+    <i class="ti ti-plane-tilt" style="font-size:48px;color:#0f172a"></i>
+    <h2 style="margin-bottom:30px">Dream Travel-KSA</h2>
+    <input type="text" id="loginUsername" placeholder="اسم المستخدم">
+    <input type="password" id="loginPassword" placeholder="كلمة المرور">
+    <button class="btn btn-primary" onclick="login()" style="width:100%">دخول</button>
+    <div id="loginError" style="color:#dc2626;font-size:12px;margin-top:10px;display:none"></div>
+      </div>
 </div>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  
 <div class="container">
   <div class="tabs">
     <button class="tab active" onclick="showTab('dashboard')">لوحة التحكم</button>
