@@ -1124,10 +1124,6 @@ async function uploadTripDoc() {
 // ==================== بدء التشغيل ====================
 (async () => {
   await loadAllData();
-
-  // إذا عندك دالة addService عرفها هنا، أو احذف السطر
-  // addService();
-
   const session = localStorage.getItem('current_session');
   if (session) {
     const s = JSON.parse(session);
@@ -1137,8 +1133,7 @@ async function uploadTripDoc() {
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('mainApp').style.display = 'block';
       document.getElementById('currentUserName').innerHTML = u.fullName;
-      if (typeof renderAll === "function") renderAll();
-      if (typeof updateEmployeeSelect === "function") updateEmployeeSelect();
+      renderAll();
     } else {
       localStorage.removeItem('current_session');
     }
