@@ -507,27 +507,27 @@ const GS_URL = 'https://script.google.com/macros/s/AKfycby-yVeAng9muQDv59TpvFzLN
     }
 
     // تسجيل الدخول
-    async function login(event) {
-      event.preventDefault();
-      const username = document.getElementById('loginUsername').value.trim();
-      const password = document.getElementById('loginPassword').value;
-      const passwordHash = await hashPassword(password);
+    async function login() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const passwordHash = await hashPassword(password);
 
-      const res = await fetch(GS_URL + '?action=read');
-      const data = await res.json();
-      users = data.users;
+  const res = await fetch(GS_URL + '?action=read');
+  const data = await res.json();
+  users = data.users || [];
 
-      const user = users.find(u => u.username === username && u.passwordHash === passwordHash);
-      if (user) {
-        currentUser = user;
-        localStorage.setItem('current_session', JSON.stringify({ username: user.username }));
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        document.getElementById('currentUserName').innerHTML = user.fullName;
-      } else {
-        document.getElementById('loginError').style.display = 'block';
-        document.getElementById('loginError').innerHTML = 'بيانات دخول غير صحيحة';
-      }
+  const user = users.find(u => u.username === username && u.passwordHash === passwordHash);
+  if (user) {
+    currentUser = user;
+    localStorage.setItem('current_session', JSON.stringify(user));
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    document.getElementById('currentUserName').innerHTML = user.fullName;
+    renderAll();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+    document.getElementById('loginError').innerHTML = '❌ اسم المستخدم أو كلمة السر غير صحيحة';
+  }
     }
 
     // تسجيل الخروج
