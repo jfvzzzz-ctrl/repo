@@ -1,14 +1,15 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dream Travel-KSA | نظام إدارة الحجوزات</title>
-<link rel="stylesheet" href__="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-<link href__="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Cairo',sans-serif;background:#f0f4f8;color:#1e293b}
@@ -77,8 +78,7 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
 .login-box input{width:100%;margin-bottom:15px}
 .user-card{background:#f8fafc;border-radius:16px;padding:15px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
 .backup-actions{display:flex;gap:10px;justify-content:flex-end;margin-bottom:20px;flex-wrap:wrap}
-@media(max-width:900px){.form-grid{grid-template-columns:repeat(2,1fr)}.chart-row{grid-template-columns:1fr}}
-@media(max-width:600px){.form-grid{grid-template-columns:1fr}}
+#mainApp{display:none}
 .sync-indicator{display:flex;align-items:center;gap:6px;font-size:12px;padding:4px 12px;border-radius:30px;background:#1e293b}
 .sync-dot{width:8px;height:8px;border-radius:50%;background:#94a3b8}
 .sync-dot.ok{background:#22c55e;animation:pulse 2s infinite}
@@ -93,55 +93,54 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
 .trip-pdf-btn{background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;border:none;border-radius:30px;padding:8px 18px;cursor:pointer;font-size:13px;font-family:inherit;display:flex;align-items:center;gap:6px;justify-content:center}
 .upload-zone{border:2px dashed #cbd5e1;border-radius:20px;padding:30px;text-align:center;color:#94a3b8;cursor:pointer;transition:border-color .2s}
 .upload-zone:hover{border-color:#38bdf8;color:#38bdf8}
+@media(max-width:900px){.form-grid{grid-template-columns:repeat(2,1fr)}.chart-row{grid-template-columns:1fr}}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
-<!-- ========== شاشة تسجيل الدخول (واحدة فقط) ========== -->
+<!-- شاشة تسجيل الدخول -->
 <div id="loginScreen" class="login-container">
   <div class="login-box">
     <i class="ti ti-plane-tilt" style="font-size:48px;color:#0f172a"></i>
-    <h2 style="margin-bottom:30px">Dream Travel-KSA</h2>
+    <h2 style="margin:10px 0 30px">Dream Travel-KSA</h2>
     <input type="text" id="loginUsername" placeholder="اسم المستخدم">
     <input type="password" id="loginPassword" placeholder="كلمة المرور">
-    <button class="btn btn-primary" onclick="login()" style="width:100%;justify-content:center">دخول</button>
-    <div id="loginError" style="color:#dc2626;font-size:13px;margin-top:12px;display:none"></div>
+    <button class="btn btn-primary" onclick="login()" style="width:100%">دخول</button>
+    <div id="loginError" style="color:#dc2626;font-size:12px;margin-top:10px;display:none"></div>
   </div>
 </div>
 
-<!-- ========== الواجهة الرئيسية ========== -->
-<div id="mainApp" style="display:none">
-
+<!-- الواجهة الرئيسية -->
+<div id="mainApp">
   <div class="topbar">
-    <div class="topbar-title">
-      <i class="ti ti-plane-tilt"></i> Dream Travel-KSA
-      <span class="topbar-badge">نظام الحجوزات</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:12px">
-      <span id="topbar-date"></span>
-      <div class="topbar-user">
-        <i class="ti ti-user"></i>
-        <span id="currentUserName"></span>
-        <button class="logout-btn" onclick="logout()">خروج</button>
-      </div>
+    <div class="topbar-title"><i class="ti ti-plane-tilt"></i> Dream Travel-KSA <span class="topbar-badge">v4.0</span></div>
+    <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap">
+      <span id="topbar-date" style="font-size:12px;color:#94a3b8"></span>
+      <div class="topbar-user"><i class="ti ti-user"></i> <span id="currentUserName">مدير</span> <button class="logout-btn" onclick="logout()">خروج</button></div>
     </div>
   </div>
 
   <div class="container">
     <div class="tabs">
-      <button class="tab active" onclick="showTab('dashboard')"><i class="ti ti-dashboard"></i> لوحة التحكم</button>
-      <button class="tab" onclick="showTab('bookings')"><i class="ti ti-calendar"></i> الحجوزات</button>
-      <button class="tab" onclick="showTab('cancelled')"><i class="ti ti-x"></i> الملغية</button>
-      <button class="tab" onclick="showTab('clients')"><i class="ti ti-users"></i> العملاء</button>
-      <button class="tab" onclick="showTab('add')"><i class="ti ti-plus"></i> حجز جديد</button>
-      <button class="tab" onclick="showTab('reports')"><i class="ti ti-report"></i> التقارير</button>
+      <button class="tab active" onclick="showTab('dashboard')">لوحة التحكم</button>
+      <button class="tab" onclick="showTab('bookings')">الحجوزات</button>
+      <button class="tab" onclick="showTab('cancelled')">الملغية</button>
+      <button class="tab" onclick="showTab('clients')">العملاء</button>
+      <button class="tab" onclick="showTab('add')">حجز جديد</button>
+      <button class="tab" onclick="showTab('reports')">التقارير</button>
       <button class="tab" onclick="showTab('trips')">📋 برنامج الرحلات</button>
-      <button class="tab" onclick="showTab('users')" id="tabUsers"><i class="ti ti-id-badge"></i> إدارة الموظفين</button>
+      <button class="tab" onclick="showTab('users')" id="tabUsers">إدارة الموظفين</button>
     </div>
 
     <div class="backup-actions">
       <button class="btn btn-outline" onclick="exportJSON()">📥 تصدير JSON</button>
       <label class="btn btn-outline" style="cursor:pointer">📤 استيراد JSON<input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(this)"></label>
+      <button class="btn btn-outline" onclick="syncWithSheet()" id="syncBtn">🔄 مزامنة</button>
+      <span id="syncStatus" style="font-size:12px;color:#64748b;display:flex;align-items:center;gap:5px">
+        <span class="sync-dot" id="syncDot"></span>
+        <span id="syncText">جاهز</span>
+      </span>
     </div>
 
     <!-- Dashboard -->
@@ -162,11 +161,25 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
       <div class="stats-grid" id="bookingsStats"></div>
       <div class="filter-row">
         <input type="text" id="searchBooking" placeholder="بحث..." oninput="renderBookings()">
-        <select id="countryFilter" onchange="renderBookings()"><option value="">كل الوجهات</option>
-          <option>أوروبا حرة</option><option>أوروبا جماعي</option><option>روسيا</option><option>جورجيا</option>
-          <option>الشمال التركي</option><option>اسطنبول</option><option>اندونيسيا</option><option>ماليزيا</option>
-          <option>تايلاند</option><option>سيرلانكا</option><option>الهند</option><option>موريشيوس</option>
-          <option>المالديف</option><option>الصين</option><option>اليابان</option><option>اذربيجان</option><option>غير ذلك</option>
+        <select id="countryFilter" onchange="renderBookings()">
+          <option value="">كل الوجهات</option>
+          <option>أوروبا حرة</option>
+          <option>أوروبا جماعي</option>
+          <option>روسيا</option>
+          <option>جورجيا</option>
+          <option>الشمال التركي</option>
+          <option>اسطنبول</option>
+          <option>اندونيسيا</option>
+          <option>ماليزيا</option>
+          <option>تايلاند</option>
+          <option>سيرلانكا</option>
+          <option>الهند</option>
+          <option>موريشيوس</option>
+          <option>المالديف</option>
+          <option>الصين</option>
+          <option>اليابان</option>
+          <option>اذربيجان</option>
+          <option>غير ذلك</option>
         </select>
         <select id="agentFilter" onchange="renderBookings()"><option value="">كل الموظفين</option></select>
         <button class="btn btn-green" onclick="exportToExcel()">تصدير Excel</button>
@@ -209,16 +222,38 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
       <div class="card">
         <div class="card-title">معلومات الرحلة</div>
         <div class="form-grid">
-          <div class="fg"><label>الدولة</label><select id="country"><option value="">اختر الدولة</option>
-            <option>أوروبا حرة</option><option>أوروبا جماعي</option><option>روسيا</option><option>جورجيا</option>
-            <option>الشمال التركي</option><option>اسطنبول</option><option>اندونيسيا</option><option>ماليزيا</option>
-            <option>تايلاند</option><option>سيرلانكا</option><option>الهند</option><option>موريشيوس</option>
-            <option>المالديف</option><option>الصين</option><option>اليابان</option><option>اذربيجان</option><option>غير ذلك</option>
-          </select></div>
+          <div class="fg"><label>الدولة</label>
+            <select id="country">
+              <option value="">اختر الدولة</option>
+              <option>أوروبا حرة</option>
+              <option>أوروبا جماعي</option>
+              <option>روسيا</option>
+              <option>جورجيا</option>
+              <option>الشمال التركي</option>
+              <option>اسطنبول</option>
+              <option>اندونيسيا</option>
+              <option>ماليزيا</option>
+              <option>تايلاند</option>
+              <option>سيرلانكا</option>
+              <option>الهند</option>
+              <option>موريشيوس</option>
+              <option>المالديف</option>
+              <option>الصين</option>
+              <option>اليابان</option>
+              <option>اذربيجان</option>
+              <option>غير ذلك</option>
+            </select>
+          </div>
           <div class="fg"><label>المدينة</label><input type="text" id="city"></div>
           <div class="fg"><label>تاريخ المغادرة</label><input type="date" id="departureDate"></div>
           <div class="fg"><label>تاريخ العودة</label><input type="date" id="returnDate"></div>
-          <div class="fg"><label>نوع الرحلة</label><select id="tripType"><option>سياحية</option><option>شهر عسل</option><option>علاجية</option></select></div>
+          <div class="fg"><label>نوع الرحلة</label>
+            <select id="tripType">
+              <option>سياحية</option>
+              <option>شهر عسل</option>
+              <option>علاجية</option>
+            </select>
+          </div>
         </div>
       </div>
       <div class="card">
@@ -228,15 +263,25 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
           <div class="fg"><label>منطقة الفندق</label><input type="text" id="hotelArea"></div>
           <div class="fg"><label>تاريخ الدخول</label><input type="date" id="checkIn"></div>
           <div class="fg"><label>تاريخ الخروج</label><input type="date" id="checkOut"></div>
-          <div class="fg"><label>نوع الغرفة</label><select id="roomType"><option>غرفة قياسية</option><option>جناح</option></select></div>
-          <div class="fg"><label>نظام الإقامة</label><select id="mealPlan"><option>بدون وجبات</option><option>إفطار فقط</option></select></div>
+          <div class="fg"><label>نوع الغرفة</label>
+            <select id="roomType">
+              <option>غرفة قياسية</option>
+              <option>جناح</option>
+            </select>
+          </div>
+          <div class="fg"><label>نظام الإقامة</label>
+            <select id="mealPlan">
+              <option>بدون وجبات</option>
+              <option>إفطار فقط</option>
+            </select>
+          </div>
           <div class="fg"><label>رقم حجز الفندق</label><input type="text" id="hotelBookingRef"></div>
         </div>
       </div>
       <div class="card">
         <div class="card-title">الخدمات الإضافية</div>
         <div id="servicesContainer"></div>
-        <button class="btn-outline" onclick="addService()" style="width:100%;margin-top:10px">+ إضافة خدمة</button>
+        <button class="btn btn-outline" onclick="addService()" style="width:100%;margin-top:10px">+ إضافة خدمة</button>
         <div class="service-total"><span>إجمالي الخدمات:</span><span id="servicesTotalPrice">0 JD</span></div>
       </div>
       <div class="card">
@@ -246,9 +291,12 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
           <div class="fg"><label>المدفوع (JD)</label><input type="number" id="paidAmount" oninput="updateTotals()"></div>
           <div class="fg"><label>المتبقي (JD)</label><input type="number" id="remainingAmount" readonly></div>
         </div>
-        <div class="fg full" style="margin-top:15px"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+        <div class="fg full"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
       </div>
-      <div class="btn-row"><button class="btn" onclick="clearForm()">مسح</button><button class="btn btn-primary" onclick="saveBooking()">حفظ</button></div>
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="clearForm()">مسح</button>
+        <button class="btn btn-primary" onclick="saveBooking()">حفظ</button>
+      </div>
     </div>
 
     <!-- التقارير -->
@@ -259,10 +307,8 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
           <div class="fg"><label>من تاريخ</label><input type="date" id="reportStart"></div>
           <div class="fg"><label>إلى تاريخ</label><input type="date" id="reportEnd"></div>
         </div>
-        <div style="margin-top:15px;display:flex;gap:10px">
-          <button class="btn btn-primary" onclick="generateReport()">عرض التقرير</button>
-          <button class="btn btn-green" onclick="printReport()">طباعة</button>
-        </div>
+        <button class="btn btn-primary" onclick="generateReport()">عرض التقرير</button>
+        <button class="btn btn-green" onclick="printReport()">طباعة</button>
       </div>
       <div id="reportPreview" class="card" style="display:none"></div>
     </div>
@@ -302,16 +348,15 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
           <div class="fg"><label>كلمة المرور</label><input type="password" id="newPassword"></div>
           <div class="fg"><label>الاسم الظاهر</label><input type="text" id="newFullName"></div>
         </div>
-        <button class="btn btn-primary" style="margin-top:15px" onclick="addEmployee()">إضافة</button>
+        <button class="btn btn-primary" onclick="addEmployee()">إضافة</button>
       </div>
       <div class="card">
         <div class="card-title">قائمة الموظفين</div>
         <div id="usersList"></div>
       </div>
     </div>
-
-  </div><!-- /container -->
-</div><!-- /mainApp -->
+  </div>
+</div>
 
 <!-- مودالات -->
 <div class="modal-bg" id="confirmModal">
@@ -320,34 +365,40 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
     <div id="confirmInfo"></div>
     <div class="btn-row">
       <button class="btn btn-outline" onclick="closeConfirmModal()">إلغاء</button>
-      <button class="btn btn-green" onclick="doConfirmBooking()">تأكيد</button>
+      <button class="btn btn-green" onclick="confirmBookingAction()">تأكيد</button>
     </div>
   </div>
 </div>
+
 <div class="modal-bg" id="cancelModal">
   <div class="modal">
     <div class="card-title">إلغاء الحجز</div>
     <div id="cancelInfo"></div>
-    <div class="fg" style="margin-top:10px">
-      <label>سبب الإلغاء</label>
+    <div class="fg"><label>سبب الإلغاء</label>
       <select id="cancelReason">
-        <option>السعر مرتفع</option><option>تاريخ غير مناسب</option>
-        <option>العميل طلب الإلغاء</option><option>لم يرد على الاتصال</option>
+        <option>السعر مرتفع</option>
+        <option>تاريخ غير مناسب</option>
+        <option>العميل طلب الإلغاء</option>
+        <option>لم يرد على الاتصال</option>
       </select>
     </div>
     <div class="btn-row">
       <button class="btn btn-outline" onclick="closeCancelModal()">إلغاء</button>
-      <button class="btn btn-red" onclick="confirmCancel()">تأكيد الإلغاء</button>
+      <button class="btn btn-red" onclick="confirmCancelAction()">تأكيد</button>
     </div>
   </div>
 </div>
 
 <script>
-// ==================== الإعدادات العامة ====================
-const GS_URL = 'https://script.google.com/macros/s/AKfycby-yVeAng9muQDv59TpvFzLNVIop_w8xb_iYLncSRl81-sHxurGF9ZN1w5h5zAJg_2_bw/exec';
-const availableServices = ["🚗 نقل مطار", "📱 شريحة اتصال", "🗺️ جولة سياحية"];
+// ================================================================
+// ==================== جافا سكريبت الرئيسي ====================
+// ================================================================
 
-// ==================== المتغيرات (تعريف واحد فقط) ====================
+// ==================== الثوابت ====================
+const GS_URL = 'https://script.google.com/macros/s/AKfycby-yVeAng9muQDv59TpvFzLNVIop_w8xb_iYLncSRl81-sHxurGF9ZN1w5h5zAJg_2_bw/exec';
+const CHUNK_SIZE = 10;
+
+// ==================== المتغيرات العامة ====================
 let users = [];
 let bookings = [];
 let cancelledBookings = [];
@@ -357,41 +408,33 @@ let currentEditId = null;
 let currentActionId = null;
 let charts = {};
 let selectedTripFile = null;
+let isSyncing = false;
+const availableServices = ["🚗 نقل مطار", "📱 شريحة اتصال", "🗺️ جولة سياحية"];
 
-// ==================== دالة التشفير (async - تعريف واحد فقط) ====================
-async function hashPassword(password) {
-  const msgUint8 = new TextEncoder().encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+// ==================== دالة التشفير ====================
+function hashPassword(pwd) {
+    return CryptoJS.SHA256(pwd).toString();
 }
 
-// ==================== تحميل البيانات ====================
-async function loadAllData() {
-  try {
-    const res = await fetch(GS_URL + '?action=read');
-    const data = await res.json();
-    users = data.users || [];
-    bookings = data.bookings || [];
-    cancelledBookings = data.cancelled || [];
-    tripDocs = data.trips || [];
-    console.log('✅ تم تحميل البيانات:', data);
-  } catch (err) {
-    console.error('❌ خطأ في تحميل البيانات:', err);
-  }
-}
-
-// ==================== حفظ البيانات ====================
-async function saveAllData() {
-  try {
-    const data = { bookings, cancelled: cancelledBookings, users, trips: tripDocs };
-    await fetch(GS_URL, {
-      method: 'POST',
-      body: new URLSearchParams({ action: 'write', data: JSON.stringify(data) })
-    });
-  } catch (err) {
-    console.error('خطأ في الحفظ:', err);
-  }
+// ==================== تحديث حالة المزامنة ====================
+function updateSyncStatus(status, message) {
+    const dot = document.getElementById('syncDot');
+    const text = document.getElementById('syncText');
+    if (!dot || !text) return;
+    
+    dot.className = 'sync-dot';
+    if (status === 'ok') {
+        dot.classList.add('ok');
+        text.textContent = message || 'متزامن';
+    } else if (status === 'syncing') {
+        dot.classList.add('syncing');
+        text.textContent = message || 'جاري المزامنة...';
+    } else if (status === 'error') {
+        dot.classList.add('error');
+        text.textContent = message || 'خطأ في المزامنة';
+    } else {
+        text.textContent = message || 'جاهز';
+    }
 }
 
 // ==================== تسجيل الدخول ====================
@@ -406,11 +449,10 @@ async function login() {
     return;
   }
 
-  errorBox.style.display = 'none';
-  const passwordHash = await hashPassword(password);
+  const passwordHash = hashPassword(password);
+  updateSyncStatus('syncing', 'جاري التحقق...');
 
   try {
-    // جلب المستخدمين من Google Sheets
     const res = await fetch(GS_URL + '?action=users');
     const data = await res.json();
     users = data.users || [];
@@ -422,19 +464,21 @@ async function login() {
       localStorage.setItem('current_session', JSON.stringify(user));
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('mainApp').style.display = 'block';
-      document.getElementById('currentUserName').textContent = user.fullName || user.username;
-      document.getElementById('tabUsers').style.display = user.role === 'admin' ? '' : 'none';
-      // تحميل بقية البيانات بعد الدخول
+      document.getElementById('currentUserName').textContent = user.fullName;
       await loadAllData();
       renderAll();
+      errorBox.style.display = 'none';
+      updateSyncStatus('ok', 'تم تسجيل الدخول');
     } else {
       errorBox.style.display = 'block';
-      errorBox.textContent = '❌ اسم المستخدم أو كلمة المرور غير صحيحة';
+      errorBox.textContent = '❌ اسم المستخدم أو كلمة السر غير صحيحة';
+      updateSyncStatus('error', 'فشل تسجيل الدخول');
     }
   } catch (err) {
     errorBox.style.display = 'block';
-    errorBox.textContent = '⚠️ خطأ في الاتصال بالخادم، حاول مرة أخرى';
+    errorBox.textContent = '⚠️ خطأ في الاتصال بالخادم';
     console.error(err);
+    updateSyncStatus('error', 'خطأ في الاتصال');
   }
 }
 
@@ -444,8 +488,122 @@ function logout() {
   localStorage.removeItem('current_session');
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('mainApp').style.display = 'none';
-  document.getElementById('loginUsername').value = '';
-  document.getElementById('loginPassword').value = '';
+}
+
+// ==================== تحميل البيانات ====================
+async function loadAllData() {
+  updateSyncStatus('syncing', 'جاري تحميل البيانات...');
+  try {
+    const res = await fetch(GS_URL + '?action=read');
+    const data = await res.json();
+    users = data.users || [];
+    bookings = data.bookings || [];
+    cancelledBookings = data.cancelled || [];
+    tripDocs = data.trips || [];
+    console.log('✅ تم تحميل البيانات:', { 
+      users: users.length, 
+      bookings: bookings.length, 
+      cancelled: cancelledBookings.length, 
+      trips: tripDocs.length 
+    });
+    updateSyncStatus('ok', 'تم تحميل ' + bookings.length + ' حجز');
+    return true;
+  } catch (err) {
+    console.error('❌ خطأ في تحميل البيانات:', err);
+    updateSyncStatus('error', 'فشل تحميل البيانات');
+    return false;
+  }
+}
+
+// ==================== حفظ البيانات على دفعات ====================
+async function saveAllData() {
+  if (isSyncing) return false;
+  isSyncing = true;
+  updateSyncStatus('syncing', 'جاري الحفظ...');
+  
+  try {
+    const allData = { 
+      bookings: bookings, 
+      cancelled: cancelledBookings, 
+      users: users, 
+      trips: tripDocs 
+    };
+    
+    // تقسيم الحجوزات إلى دفعات
+    const chunks = [];
+    if (allData.bookings.length > 0) {
+      for (let i = 0; i < allData.bookings.length; i += CHUNK_SIZE) {
+        chunks.push({
+          bookings: allData.bookings.slice(i, i + CHUNK_SIZE),
+          cancelled: i === 0 ? allData.cancelled : [],
+          users: i === 0 ? allData.users : [],
+          trips: i === 0 ? allData.trips : [],
+          chunkIndex: Math.floor(i / CHUNK_SIZE) + 1,
+          totalChunks: Math.ceil(allData.bookings.length / CHUNK_SIZE)
+        });
+      }
+    } else {
+      chunks.push({
+        bookings: [],
+        cancelled: allData.cancelled,
+        users: allData.users,
+        trips: allData.trips,
+        chunkIndex: 1,
+        totalChunks: 1
+      });
+    }
+    
+    let successCount = 0;
+    for (const chunk of chunks) {
+      updateSyncStatus('syncing', 'جاري حفظ الدفعة ' + chunk.chunkIndex + '/' + chunk.totalChunks + '...');
+      
+      const res = await fetch(GS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'write',
+          data: chunk
+        })
+      });
+      
+      const result = await res.json();
+      if (result.success) {
+        successCount++;
+      } else {
+        console.error('❌ فشل في حفظ الدفعة:', result.error);
+      }
+    }
+    
+    if (successCount === chunks.length) {
+      console.log('✅ تم حفظ جميع البيانات');
+      updateSyncStatus('ok', 'تم حفظ ' + bookings.length + ' حجز');
+      return true;
+    } else {
+      console.warn('⚠️ تم حفظ بعض الدفعات فقط');
+      updateSyncStatus('error', 'تم حفظ ' + successCount + '/' + chunks.length + ' دفعة');
+      return false;
+    }
+  } catch (err) {
+    console.error('❌ خطأ في حفظ البيانات:', err);
+    updateSyncStatus('error', err.message);
+    return false;
+  } finally {
+    isSyncing = false;
+  }
+}
+
+// ==================== المزامنة اليدوية ====================
+async function syncWithSheet() {
+  const btn = document.getElementById('syncBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ جاري...';
+  
+  await loadAllData();
+  renderAll();
+  
+  btn.textContent = '🔄 مزامنة';
+  btn.disabled = false;
+  alert('✅ تمت المزامنة بنجاح');
 }
 
 // ==================== إدارة الموظفين ====================
@@ -453,25 +611,55 @@ function updateEmployeeSelect() {
   const select = document.getElementById('agentName');
   const filter = document.getElementById('agentFilter');
   const employees = users.filter(u => u.role === 'employee' || u.role === 'admin');
-  if (select) select.innerHTML = '<option value="">اختر الموظف</option>' + employees.map(u => `<option value="${u.username}">${u.fullName || u.username}</option>`).join('');
-  if (filter) filter.innerHTML = '<option value="">كل الموظفين</option>' + employees.map(u => `<option value="${u.username}">${u.fullName || u.username}</option>`).join('');
+  
+  if (select) {
+    select.innerHTML = '<option value="">اختر الموظف</option>';
+    employees.forEach(u => {
+      select.innerHTML += '<option value="' + u.username + '">' + u.fullName + '</option>';
+    });
+  }
+  
+  if (filter) {
+    filter.innerHTML = '<option value="">كل الموظفين</option>';
+    employees.forEach(u => {
+      filter.innerHTML += '<option value="' + u.username + '">' + u.fullName + '</option>';
+    });
+  }
 }
 
 function getEmployeeName(username) {
   const user = users.find(u => u.username === username);
-  return user ? (user.fullName || user.username) : username;
+  return user ? user.fullName : username;
 }
 
-async function addEmployee() {
-  if (currentUser?.role !== 'admin') { alert('غير مصرح - فقط المدير'); return; }
+function addEmployee() {
+  if (currentUser?.role !== 'admin') { 
+    alert('غير مصرح - فقط المدير'); 
+    return; 
+  }
+  
   const username = document.getElementById('newUsername').value.trim();
   const password = document.getElementById('newPassword').value;
   const fullName = document.getElementById('newFullName').value.trim();
-  if (!username || !password) { alert('الرجاء إدخال البيانات'); return; }
-  if (users.find(u => u.username === username)) { alert('اسم المستخدم موجود مسبقاً'); return; }
-  const passwordHash = await hashPassword(password);
-  users.push({ username, passwordHash, role: 'employee', fullName: fullName || username });
-  await saveAllData();
+  
+  if (!username || !password) { 
+    alert('الرجاء إدخال البيانات'); 
+    return; 
+  }
+  
+  if (users.find(u => u.username === username)) { 
+    alert('اسم المستخدم موجود'); 
+    return; 
+  }
+  
+  users.push({ 
+    username: username, 
+    passwordHash: hashPassword(password), 
+    role: 'employee', 
+    fullName: fullName || username 
+  });
+  
+  saveAllData();
   document.getElementById('newUsername').value = '';
   document.getElementById('newPassword').value = '';
   document.getElementById('newFullName').value = '';
@@ -480,12 +668,14 @@ async function addEmployee() {
   alert('✅ تم إضافة الموظف');
 }
 
-async function deleteEmployee(username) {
+function deleteEmployee(username) {
   if (currentUser?.role !== 'admin') return;
-  if (username === 'admin') { alert('لا يمكن حذف المدير'); return; }
-  if (!confirm('هل تريد حذف هذا الموظف؟')) return;
+  if (username === 'admin') { 
+    alert('لا يمكن حذف المدير'); 
+    return; 
+  }
   users = users.filter(u => u.username !== username);
-  await saveAllData();
+  saveAllData();
   renderUsersList();
   updateEmployeeSelect();
 }
@@ -493,31 +683,50 @@ async function deleteEmployee(username) {
 function renderUsersList() {
   const container = document.getElementById('usersList');
   if (!container) return;
-  container.innerHTML = users.map(u => `
-    <div class="user-card">
-      <div><strong>${u.fullName || u.username}</strong><br><small style="color:#64748b">${u.username}</small></div>
-      <div>${u.role === 'admin' ? '👑 مدير' : '👤 موظف'}</div>
-      ${u.username !== 'admin' ? `<button class="btn btn-red" style="font-size:12px;padding:5px 14px" onclick="deleteEmployee('${u.username}')">حذف</button>` : ''}
-    </div>
-  `).join('') || '<div class="empty">لا يوجد موظفون</div>';
+  
+  let html = '';
+  users.forEach(u => {
+    html += '<div class="user-card">';
+    html += '<div><strong>' + u.fullName + '</strong><br><small>' + u.username + '</small></div>';
+    html += '<div>' + (u.role === 'admin' ? 'مدير' : 'موظف') + '</div>';
+    if (u.username !== 'admin') {
+      html += '<button class="btn btn-outline" onclick="deleteEmployee(\'' + u.username + '\')">حذف</button>';
+    }
+    html += '</div>';
+  });
+  container.innerHTML = html;
 }
 
 // ==================== الخدمات الإضافية ====================
 function addService(sData) {
   const container = document.getElementById('servicesContainer');
-  const div = document.createElement('div'); div.className = 'service-item';
+  const div = document.createElement('div'); 
+  div.className = 'service-item';
+  
   let opts = '<select class="service-type">';
-  availableServices.forEach(s => opts += `<option value="${s}">${s}</option>`);
+  availableServices.forEach(function(s) {
+    opts += '<option value="' + s + '">' + s + '</option>';
+  });
   opts += '</select>';
-  div.innerHTML = `${opts}<input type="number" class="service-price" placeholder="السعر" value="0"><button class="btn-outline" onclick="this.closest('.service-item').remove(); updateTotals()">🗑️</button>`;
-  if (sData) { div.querySelector('.service-type').value = sData.name; div.querySelector('.service-price').value = sData.price; }
-  div.querySelector('.service-price').oninput = () => updateTotals();
-  container.appendChild(div); updateTotals();
+  
+  div.innerHTML = opts + 
+    '<input type="number" class="service-price" placeholder="السعر" value="0">' +
+    '<button class="btn btn-outline" onclick="this.closest(\'.service-item\').remove(); updateTotals()">🗑️</button>';
+  
+  if (sData) { 
+    div.querySelector('.service-type').value = sData.name; 
+    div.querySelector('.service-price').value = sData.price; 
+  }
+  
+  div.querySelector('.service-price').oninput = function() { updateTotals(); };
+  container.appendChild(div); 
+  updateTotals();
 }
 
 function getServices() {
   const s = [];
-  document.querySelectorAll('#servicesContainer .service-item').forEach(i => {
+  const items = document.querySelectorAll('#servicesContainer .service-item');
+  items.forEach(function(i) {
     const n = i.querySelector('.service-type')?.value;
     const p = parseFloat(i.querySelector('.service-price')?.value) || 0;
     if (n && p > 0) s.push({ name: n, price: p });
@@ -527,29 +736,48 @@ function getServices() {
 
 function setServices(sv) {
   const c = document.getElementById('servicesContainer');
-  if (c) { c.innerHTML = ''; if (sv && sv.length) sv.forEach(s => addService(s)); else addService(); updateTotals(); }
+  if (!c) return;
+  
+  c.innerHTML = ''; 
+  if (sv && sv.length) {
+    sv.forEach(function(s) { addService(s); });
+  } else {
+    addService(); 
+  }
+  updateTotals();
 }
 
 function updateTotals() {
   let st = 0;
-  document.querySelectorAll('#servicesContainer .service-item .service-price').forEach(i => { st += parseFloat(i.value) || 0; });
-  const stEl = document.getElementById('servicesTotalPrice');
-  if (stEl) stEl.innerHTML = st.toFixed(2) + ' JD';
+  const prices = document.querySelectorAll('#servicesContainer .service-item .service-price');
+  prices.forEach(function(i) { 
+    st += parseFloat(i.value) || 0; 
+  });
+  
+  const totalEl = document.getElementById('servicesTotalPrice');
+  if (totalEl) totalEl.innerHTML = st.toFixed(2) + ' JD';
+  
   const base = parseFloat(document.getElementById('basePrice')?.value) || 0;
   const paid = parseFloat(document.getElementById('paidAmount')?.value) || 0;
   const total = base + st;
-  const remEl = document.getElementById('remainingAmount');
-  if (remEl) remEl.value = (total - paid).toFixed(2);
+  
+  const remainingEl = document.getElementById('remainingAmount');
+  if (remainingEl) remainingEl.value = (total - paid).toFixed(2);
 }
 
-// ==================== واتساب ====================
+// ==================== دوال واتساب ====================
 function sendWhatsApp(phone, name, country) {
-  if (!phone) { alert('لا يوجد رقم هاتف'); return; }
+  if (!phone) { 
+    alert('لا يوجد رقم هاتف'); 
+    return; 
+  }
+  
   let cleanPhone = phone.replace(/\D/g, '');
-  if (cleanPhone.startsWith('0')) cleanPhone = '966' + cleanPhone.substring(1);
-  if (!cleanPhone.startsWith('966') && !cleanPhone.startsWith('962')) cleanPhone = '966' + cleanPhone;
-  const msg = `مرحباً ${name} 👋\nنذكركم برحلتكم إلى ${country}\nنتمنى لكم رحلة ممتعة!`;
-  window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+  if (cleanPhone.startsWith('0')) cleanPhone = '962' + cleanPhone.substring(1);
+  if (!cleanPhone.startsWith('962')) cleanPhone = '962' + cleanPhone;
+  
+  const msg = 'مرحباً ' + name + ' 👋\nنذكركم برحلتكم إلى ' + country + '\nنتمنى لكم رحلة ممتعة!';
+  window.open('https://wa.me/' + cleanPhone + '?text=' + encodeURIComponent(msg), '_blank');
 }
 
 // ==================== عرض الحجوزات ====================
@@ -557,98 +785,146 @@ function renderBookings() {
   const search = (document.getElementById('searchBooking')?.value || '').toLowerCase();
   const country = document.getElementById('countryFilter')?.value || '';
   const agent = document.getElementById('agentFilter')?.value || '';
-  let filtered = bookings.filter(b => {
-    if (search && !(b.clientName || '').toLowerCase().includes(search)) return false;
+  
+  let filtered = bookings.filter(function(b) {
+    if (search && !b.clientName.toLowerCase().includes(search)) return false;
     if (country && b.country !== country) return false;
     if (agent && b.agentName !== agent) return false;
     return true;
   });
-
-  const totalRev = bookings.reduce((s, b) => s + (b.totalPrice || 0), 0);
-  const totalPaid = bookings.reduce((s, b) => s + (b.paidAmount || 0), 0);
-  document.getElementById('bookingsStats').innerHTML = `
-    <div class="stat-card"><div class="value">${bookings.length}</div><div class="label">إجمالي الحجوزات</div></div>
-    <div class="stat-card"><div class="value">${Math.round(totalRev).toLocaleString()} JD</div><div class="label">الإيرادات</div></div>
-    <div class="stat-card"><div class="value">${Math.round(totalPaid).toLocaleString()} JD</div><div class="label">المدفوع</div></div>
-  `;
-
-  if (filtered.length === 0) { document.getElementById('bookingsList').innerHTML = '<div class="empty">لا توجد حجوزات</div>'; return; }
-
-  document.getElementById('bookingsList').innerHTML = filtered.map(b => `
-    <div class="bcard ${b.isConfirmed ? 'confirmed' : ''}">
-      <div class="bhead">
-        <span class="bname">${b.clientName}</span>
-        <div class="badges">
-          <span class="badge badge-info">${b.country}</span>
-          <span class="badge ${b.isConfirmed ? 'badge-success' : 'badge-warning'}">${b.isConfirmed ? '✅ مؤكد' : '⏳ قيد الانتظار'}</span>
-        </div>
-      </div>
-      <div class="bmeta">
-        <span class="mi">🏨 ${b.hotelName || 'لا يوجد'}</span>
-        <span class="mi">📅 ${b.departureDate || '—'} → ${b.returnDate || '—'}</span>
-        <span class="mi">💰 ${(b.totalPrice || 0).toLocaleString()} JD</span>
-        <span class="mi">👤 ${getEmployeeName(b.agentName)}</span>
-      </div>
-      ${b.notes ? `<div style="font-size:12px;padding:8px;background:#f8fafc;border-radius:12px">📝 ${b.notes}</div>` : ''}
-      <div class="bactions">
-        <button class="bsm" onclick="editBooking('${b.id}')">تعديل</button>
-        ${!b.isConfirmed ? `<button class="bsm btn-green" onclick="openConfirmModal('${b.id}')">تأكيد</button>` : ''}
-        <button class="bsm btn-red" onclick="openCancelModal('${b.id}')">إلغاء</button>
-        ${b.clientPhone ? `<button class="bsm btn-wa" onclick="sendWhatsApp('${b.clientPhone}','${b.clientName}','${b.country}')">واتساب</button>` : ''}
-      </div>
-    </div>
-  `).join('');
+  
+  const totalRev = bookings.reduce(function(s, b) { return s + (b.totalPrice || 0); }, 0);
+  const totalPaid = bookings.reduce(function(s, b) { return s + (b.paidAmount || 0); }, 0);
+  
+  const statsHtml = 
+    '<div class="stat-card"><div class="value">' + bookings.length + '</div><div class="label">إجمالي الحجوزات</div></div>' +
+    '<div class="stat-card"><div class="value">' + Math.round(totalRev).toLocaleString() + ' JD</div><div class="label">الإيرادات</div></div>' +
+    '<div class="stat-card"><div class="value">' + Math.round(totalPaid).toLocaleString() + ' JD</div><div class="label">المدفوع</div></div>';
+  document.getElementById('bookingsStats').innerHTML = statsHtml;
+  
+  if (filtered.length === 0) { 
+    document.getElementById('bookingsList').innerHTML = '<div class="empty">لا توجد حجوزات</div>'; 
+    return; 
+  }
+  
+  let html = '';
+  filtered.forEach(function(b) {
+    html += '<div class="bcard ' + (b.isConfirmed ? 'confirmed' : '') + '">';
+    html += '<div class="bhead"><span class="bname">' + b.clientName + '</span>';
+    html += '<div class="badges"><span class="badge badge-info">' + b.country + '</span>';
+    html += '<span class="badge ' + (b.isConfirmed ? 'badge-success' : 'badge-warning') + '">' + (b.isConfirmed ? 'مؤكد' : 'قيد الانتظار') + '</span></div></div>';
+    html += '<div class="bmeta">';
+    html += '<span class="mi">🏨 ' + (b.hotelName || 'لا يوجد') + '</span>';
+    html += '<span class="mi">📅 ' + (b.departureDate || '—') + ' → ' + (b.returnDate || '—') + '</span>';
+    html += '<span class="mi">💰 ' + (b.totalPrice || 0).toLocaleString() + ' JD</span>';
+    html += '<span class="mi">👤 ' + getEmployeeName(b.agentName) + '</span>';
+    html += '</div>';
+    
+    if (b.notes) {
+      html += '<div style="font-size:12px;padding:8px;background:#f8fafc;border-radius:12px">📝 ' + b.notes + '</div>';
+    }
+    
+    html += '<div class="bactions">';
+    html += '<button class="bsm" onclick="editBooking(\'' + b.id + '\')">تعديل</button>';
+    if (!b.isConfirmed) {
+      html += '<button class="bsm btn-green" onclick="openConfirmModal(\'' + b.id + '\')">تأكيد</button>';
+    }
+    html += '<button class="bsm btn-red" onclick="openCancelModal(\'' + b.id + '\')">إلغاء</button>';
+    if (b.clientPhone) {
+      html += '<button class="bsm btn-wa" onclick="sendWhatsApp(\'' + b.clientPhone + '\',\'' + b.clientName + '\',\'' + b.country + '\')">واتساب</button>';
+    }
+    html += '</div></div>';
+  });
+  document.getElementById('bookingsList').innerHTML = html;
 }
 
+// ==================== عرض الملغية ====================
 function renderCancelled() {
   const search = (document.getElementById('searchCancelled')?.value || '').toLowerCase();
-  let filtered = cancelledBookings.filter(c => !search || (c.clientName || '').toLowerCase().includes(search));
-  document.getElementById('cancelledStats').innerHTML = `<div class="stat-card"><div class="value">${cancelledBookings.length}</div><div class="label">حجوزات ملغية</div></div>`;
-  if (filtered.length === 0) { document.getElementById('cancelledList').innerHTML = '<div class="empty">لا توجد حجوزات ملغية</div>'; return; }
-  document.getElementById('cancelledList').innerHTML = filtered.map(c => `
-    <div class="bcard cancelled">
-      <div class="bhead"><span class="bname">${c.clientName}</span><div class="badges"><span class="badge badge-danger">ملغي</span></div></div>
-      <div class="bmeta">
-        <span class="mi">📅 ${c.departureDate || '—'}</span>
-        <span class="mi">💰 ${(c.totalPrice || 0).toLocaleString()} JD</span>
-        <span class="mi">📝 السبب: ${c.reason || 'غير محدد'}</span>
-      </div>
-    </div>
-  `).join('');
+  let filtered = cancelledBookings.filter(function(c) {
+    return !search || c.clientName.toLowerCase().includes(search);
+  });
+  
+  document.getElementById('cancelledStats').innerHTML = 
+    '<div class="stat-card"><div class="value">' + cancelledBookings.length + '</div><div class="label">حجوزات ملغية</div></div>';
+  
+  if (filtered.length === 0) { 
+    document.getElementById('cancelledList').innerHTML = '<div class="empty">لا توجد حجوزات ملغية</div>'; 
+    return; 
+  }
+  
+  let html = '';
+  filtered.forEach(function(c) {
+    html += '<div class="bcard cancelled">';
+    html += '<div class="bhead"><span class="bname">' + c.clientName + '</span>';
+    html += '<div class="badges"><span class="badge badge-danger">ملغي</span></div></div>';
+    html += '<div class="bmeta">';
+    html += '<span class="mi">📅 ' + (c.departureDate || '—') + '</span>';
+    html += '<span class="mi">💰 ' + (c.totalPrice || 0).toLocaleString() + ' JD</span>';
+    html += '<span class="mi">📝 السبب: ' + (c.reason || 'غير محدد') + '</span>';
+    html += '</div></div>';
+  });
+  document.getElementById('cancelledList').innerHTML = html;
 }
 
+// ==================== عرض العملاء ====================
 function renderClients() {
   const search = (document.getElementById('clientSearch')?.value || '').toLowerCase();
   const map = new Map();
-  bookings.forEach(b => { if (!map.has(b.clientName)) map.set(b.clientName, []); map.get(b.clientName).push(b); });
-  let filtered = Array.from(map.entries()).filter(([n]) => !search || n.toLowerCase().includes(search));
-  if (filtered.length === 0) { document.getElementById('clientsList').innerHTML = '<div class="empty">لا يوجد عملاء</div>'; return; }
-  document.getElementById('clientsList').innerHTML = filtered.map(([name, trips]) => `
-    <div class="bcard">
-      <div class="bhead"><span class="bname">${name}</span><span class="badge badge-info">${trips.length} رحلة</span></div>
-      <div class="bmeta">
-        <span class="mi">💰 ${Math.round(trips.reduce((s, t) => s + (t.totalPrice || 0), 0)).toLocaleString()} JD</span>
-        <span class="mi">📧 ${trips[0]?.clientEmail || 'لا يوجد'}</span>
-        <span class="mi">📞 ${trips[0]?.clientPhone || 'لا يوجد'}</span>
-      </div>
-    </div>
-  `).join('');
+  
+  bookings.forEach(function(b) { 
+    if (!map.has(b.clientName)) map.set(b.clientName, []); 
+    map.get(b.clientName).push(b); 
+  });
+  
+  let filtered = Array.from(map.entries()).filter(function(item) {
+    return !search || item[0].toLowerCase().includes(search);
+  });
+  
+  if (filtered.length === 0) { 
+    document.getElementById('clientsList').innerHTML = '<div class="empty">لا يوجد عملاء</div>'; 
+    return; 
+  }
+  
+  let html = '';
+  filtered.forEach(function(item) {
+    var name = item[0];
+    var trips = item[1];
+    var total = trips.reduce(function(s, t) { return s + (t.totalPrice || 0); }, 0);
+    
+    html += '<div class="bcard">';
+    html += '<div class="bhead"><span class="bname">' + name + '</span>';
+    html += '<span class="badge badge-info">' + trips.length + ' رحلة</span></div>';
+    html += '<div class="bmeta">';
+    html += '<span class="mi">💰 ' + Math.round(total).toLocaleString() + ' JD</span>';
+    html += '<span class="mi">📧 ' + (trips[0]?.clientEmail || 'لا يوجد') + '</span>';
+    html += '<span class="mi">📞 ' + (trips[0]?.clientPhone || 'لا يوجد') + '</span>';
+    html += '</div></div>';
+  });
+  document.getElementById('clientsList').innerHTML = html;
 }
 
 // ==================== حفظ الحجز ====================
-async function saveBooking() {
+function saveBooking() {
   const name = document.getElementById('clientName').value.trim();
   const country = document.getElementById('country').value;
   const agent = document.getElementById('agentName').value;
-  if (!name || !country) { alert('الرجاء إدخال اسم العميل والدولة'); return; }
-  if (!agent) { alert('الرجاء اختيار الموظف المسؤول'); return; }
-
+  
+  if (!name || !country) { 
+    alert('الرجاء إدخال اسم العميل والدولة'); 
+    return; 
+  }
+  if (!agent) { 
+    alert('الرجاء اختيار الموظف المسؤول'); 
+    return; 
+  }
+  
   const services = getServices();
-  const servicesTotal = services.reduce((s, x) => s + x.price, 0);
+  const servicesTotal = services.reduce(function(s, x) { return s + x.price; }, 0);
   const basePrice = parseFloat(document.getElementById('basePrice').value) || 0;
   const totalPrice = basePrice + servicesTotal;
   const paidAmount = parseFloat(document.getElementById('paidAmount').value) || 0;
-
+  
   const booking = {
     id: currentEditId || Date.now().toString(),
     clientName: name,
@@ -657,7 +933,7 @@ async function saveBooking() {
     travelers: document.getElementById('travelers').value,
     agentName: agent,
     bookingSource: document.getElementById('bookingSource').value,
-    country,
+    country: country,
     city: document.getElementById('city').value,
     departureDate: document.getElementById('departureDate').value,
     returnDate: document.getElementById('returnDate').value,
@@ -669,34 +945,41 @@ async function saveBooking() {
     roomType: document.getElementById('roomType').value,
     mealPlan: document.getElementById('mealPlan').value,
     hotelBookingRef: document.getElementById('hotelBookingRef').value,
-    services,
-    servicesTotal,
-    basePrice,
-    totalPrice,
-    paidAmount,
+    services: services,
+    servicesTotal: servicesTotal,
+    basePrice: basePrice,
+    totalPrice: totalPrice,
+    paidAmount: paidAmount,
     isConfirmed: false,
     notes: document.getElementById('notes').value,
     createdAt: Date.now()
   };
-
+  
   if (currentEditId) {
-    const idx = bookings.findIndex(b => b.id === currentEditId);
-    if (idx !== -1) { booking.isConfirmed = bookings[idx].isConfirmed; bookings[idx] = booking; }
+    const idx = bookings.findIndex(function(b) { return b.id === currentEditId; });
+    if (idx !== -1) bookings[idx] = booking;
     currentEditId = null;
   } else {
     bookings.unshift(booking);
   }
-
-  await saveAllData();
+  
+  saveAllData().then(function(success) {
+    if (success) {
+      renderAll();
+    }
+  });
+  
   clearForm();
-  renderAll();
+  renderBookings();
   showTab('bookings');
   alert('✅ تم حفظ الحجز');
 }
 
+// ==================== تعديل الحجز ====================
 function editBooking(id) {
-  const b = bookings.find(b => b.id === id);
+  const b = bookings.find(function(item) { return item.id === id; });
   if (!b) return;
+  
   currentEditId = id;
   document.getElementById('clientName').value = b.clientName;
   document.getElementById('clientPhone').value = b.clientPhone || '';
@@ -724,189 +1007,294 @@ function editBooking(id) {
   showTab('add');
 }
 
+// ==================== مسح النموذج ====================
 function clearForm() {
-  ['clientName','clientPhone','clientEmail','city','departureDate','returnDate',
-   'hotelName','hotelArea','checkIn','checkOut','hotelBookingRef','basePrice','paidAmount','notes'].forEach(id => {
-    const el = document.getElementById(id);
+  var ids = ['clientName', 'clientPhone', 'clientEmail', 'city', 'departureDate', 'returnDate', 
+             'hotelName', 'hotelArea', 'checkIn', 'checkOut', 'hotelBookingRef', 'basePrice', 
+             'paidAmount', 'notes'];
+  ids.forEach(function(id) {
+    var el = document.getElementById(id);
     if (el) el.value = '';
   });
+  
   document.getElementById('travelers').value = '2';
   document.getElementById('country').value = '';
   document.getElementById('agentName').value = '';
-  const sc = document.getElementById('servicesContainer');
-  if (sc) sc.innerHTML = '';
+  
+  var container = document.getElementById('servicesContainer');
+  if (container) container.innerHTML = '';
+  
   addService();
   updateTotals();
   currentEditId = null;
 }
 
-// ==================== تأكيد وإلغاء الحجز ====================
+// ==================== تأكيد وإلغاء ====================
 function openConfirmModal(id) {
-  const b = bookings.find(b => b.id === id);
+  const b = bookings.find(function(item) { return item.id === id; });
   if (!b) return;
   currentActionId = id;
-  document.getElementById('confirmInfo').innerHTML = `<p><strong>${b.clientName}</strong></p><p>💰 ${b.totalPrice} JD &nbsp;|&nbsp; 💵 المدفوع: ${b.paidAmount} JD</p>`;
+  document.getElementById('confirmInfo').innerHTML = 
+    '<p><strong>' + b.clientName + '</strong></p>' +
+    '<p>💰 ' + b.totalPrice + ' JD | 💵 المدفوع: ' + b.paidAmount + ' JD</p>';
   document.getElementById('confirmModal').classList.add('open');
 }
 
-async function doConfirmBooking() {
-  const b = bookings.find(b => b.id === currentActionId);
+function confirmBookingAction() {
+  const b = bookings.find(function(item) { return item.id === currentActionId; });
   if (!b) return;
   b.isConfirmed = true;
-  await saveAllData();
+  saveAllData().then(function() {
+    renderAll();
+  });
   closeConfirmModal();
-  renderAll();
   alert('✅ تم تأكيد الحجز');
 }
 
 function openCancelModal(id) {
-  const b = bookings.find(b => b.id === id);
+  const b = bookings.find(function(item) { return item.id === id; });
   if (!b) return;
   currentActionId = id;
-  document.getElementById('cancelInfo').innerHTML = `<p><strong>${b.clientName}</strong></p><p>💰 ${b.totalPrice} JD</p>`;
+  document.getElementById('cancelInfo').innerHTML = 
+    '<p><strong>' + b.clientName + '</strong></p>' +
+    '<p>💰 ' + b.totalPrice + ' JD</p>';
   document.getElementById('cancelModal').classList.add('open');
 }
 
-async function confirmCancel() {
-  const b = bookings.find(b => b.id === currentActionId);
+function confirmCancelAction() {
+  const b = bookings.find(function(item) { return item.id === currentActionId; });
   if (!b) return;
+  
   const reason = document.getElementById('cancelReason').value;
-  cancelledBookings.push({ ...b, reason, cancelledAt: Date.now() });
-  bookings = bookings.filter(b => b.id !== currentActionId);
-  await saveAllData();
+  cancelledBookings.push({ 
+    id: b.id,
+    clientName: b.clientName,
+    country: b.country,
+    departureDate: b.departureDate,
+    totalPrice: b.totalPrice,
+    paidAmount: b.paidAmount,
+    reason: reason, 
+    cancelledAt: Date.now() 
+  });
+  
+  bookings = bookings.filter(function(item) { return item.id !== currentActionId; });
+  saveAllData().then(function() {
+    renderAll();
+  });
   closeCancelModal();
-  renderAll();
   alert('✅ تم إلغاء الحجز');
 }
 
-function closeConfirmModal() { document.getElementById('confirmModal').classList.remove('open'); }
-function closeCancelModal() { document.getElementById('cancelModal').classList.remove('open'); }
+function closeConfirmModal() { 
+  document.getElementById('confirmModal').classList.remove('open'); 
+}
+
+function closeCancelModal() { 
+  document.getElementById('cancelModal').classList.remove('open'); 
+}
 
 // ==================== Dashboard ====================
 function updateDashboard() {
   const total = bookings.length;
-  const revenue = bookings.reduce((s, b) => s + (b.totalPrice || 0), 0);
-  const paid = bookings.reduce((s, b) => s + (b.paidAmount || 0), 0);
+  const revenue = bookings.reduce(function(s, b) { return s + (b.totalPrice || 0); }, 0);
+  const paid = bookings.reduce(function(s, b) { return s + (b.paidAmount || 0); }, 0);
   const cancelled = cancelledBookings.length;
-  const confirmed = bookings.filter(b => b.isConfirmed).length;
-
-  document.getElementById('dashboardStats').innerHTML = `
-    <div class="stat-card"><div class="value">${total}</div><div class="label">إجمالي الحجوزات</div></div>
-    <div class="stat-card"><div class="value">${Math.round(revenue).toLocaleString()} JD</div><div class="label">الإيرادات</div></div>
-    <div class="stat-card"><div class="value">${Math.round(paid).toLocaleString()} JD</div><div class="label">المدفوع</div></div>
-    <div class="stat-card"><div class="value">${confirmed}</div><div class="label">مؤكدة</div></div>
-    <div class="stat-card"><div class="value">${cancelled}</div><div class="label">ملغية</div></div>
-  `;
-
-  const monthly = {};
-  bookings.forEach(b => {
-    const d = new Date(b.createdAt);
-    const m = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  const confirmed = bookings.filter(function(b) { return b.isConfirmed; }).length;
+  
+  document.getElementById('dashboardStats').innerHTML = 
+    '<div class="stat-card"><div class="value">' + total + '</div><div class="label">إجمالي الحجوزات</div></div>' +
+    '<div class="stat-card"><div class="value">' + Math.round(revenue).toLocaleString() + ' JD</div><div class="label">الإيرادات</div></div>' +
+    '<div class="stat-card"><div class="value">' + Math.round(paid).toLocaleString() + ' JD</div><div class="label">المدفوع</div></div>' +
+    '<div class="stat-card"><div class="value">' + confirmed + '</div><div class="label">مؤكدة</div></div>' +
+    '<div class="stat-card"><div class="value">' + cancelled + '</div><div class="label">ملغية</div></div>';
+  
+  // الإيرادات الشهرية
+  var monthly = {};
+  bookings.forEach(function(b) {
+    var d = new Date(b.createdAt);
+    var m = d.getFullYear() + '-' + (d.getMonth() + 1);
     monthly[m] = (monthly[m] || 0) + (b.totalPrice || 0);
   });
-  const months = Object.keys(monthly).sort().slice(-6);
-  const revData = months.map(m => monthly[m]);
-
+  var months = Object.keys(monthly).sort().slice(-6);
+  var revData = months.map(function(m) { return monthly[m]; });
+  
   if (charts.revenueChart) charts.revenueChart.destroy();
   charts.revenueChart = new Chart(document.getElementById('revenueChart'), {
-    type: 'line', data: { labels: months, datasets: [{ label: 'الإيرادات (JD)', data: revData, borderColor: '#059669', backgroundColor: 'rgba(5,150,105,0.1)', fill: true }] }
+    type: 'line', 
+    data: { 
+      labels: months, 
+      datasets: [{ label: 'الإيرادات (JD)', data: revData, borderColor: '#059669', fill: true }] 
+    }
   });
-
-  const dest = {};
-  bookings.forEach(b => { if (b.country) dest[b.country] = (dest[b.country] || 0) + 1; });
+  
+  // توزيع الحجوزات حسب الوجهة
+  var dest = {};
+  bookings.forEach(function(b) { 
+    dest[b.country] = (dest[b.country] || 0) + 1; 
+  });
+  
   if (charts.destinationsChart) charts.destinationsChart.destroy();
   charts.destinationsChart = new Chart(document.getElementById('destinationsChart'), {
-    type: 'pie', data: { labels: Object.keys(dest), datasets: [{ data: Object.values(dest), backgroundColor: ['#059669','#3b82f6','#f59e0b','#dc2626','#8b5cf6','#ec4899'] }] }
+    type: 'pie', 
+    data: { 
+      labels: Object.keys(dest), 
+      datasets: [{ data: Object.values(dest), backgroundColor: ['#059669', '#3b82f6', '#f59e0b', '#dc2626', '#8b5cf6'] }] 
+    }
   });
-
-  const agents = {};
-  bookings.forEach(b => {
+  
+  // أداء الموظفين
+  var agents = {};
+  bookings.forEach(function(b) {
     if (b.agentName) {
-      const name = getEmployeeName(b.agentName);
+      var name = getEmployeeName(b.agentName);
       agents[name] = (agents[name] || 0) + (b.totalPrice || 0);
     }
   });
+  
   if (charts.agentsChart) charts.agentsChart.destroy();
   charts.agentsChart = new Chart(document.getElementById('agentsChart'), {
-    type: 'bar', data: { labels: Object.keys(agents), datasets: [{ label: 'المبيعات (JD)', data: Object.values(agents), backgroundColor: '#3b82f6' }] }
+    type: 'bar', 
+    data: { 
+      labels: Object.keys(agents), 
+      datasets: [{ label: 'المبيعات (JD)', data: Object.values(agents), backgroundColor: '#3b82f6' }] 
+    }
   });
-
+  
+  // نسبة النجاح
   if (charts.conversionChart) charts.conversionChart.destroy();
   charts.conversionChart = new Chart(document.getElementById('conversionChart'), {
-    type: 'doughnut', data: { labels: ['ناجحة', 'ملغية'], datasets: [{ data: [bookings.length, cancelledBookings.length], backgroundColor: ['#059669', '#dc2626'] }] }
+    type: 'doughnut', 
+    data: { 
+      labels: ['ناجحة', 'ملغية'], 
+      datasets: [{ data: [bookings.length, cancelledBookings.length], backgroundColor: ['#059669', '#dc2626'] }] 
+    }
   });
 }
 
 // ==================== التقارير والتصدير ====================
 function generateReport() {
-  const start = document.getElementById('reportStart').value;
-  const end = document.getElementById('reportEnd').value;
-  let filtered = [...bookings];
-  if (start) filtered = filtered.filter(b => b.departureDate >= start);
-  if (end) filtered = filtered.filter(b => b.departureDate <= end);
-  const totalRev = filtered.reduce((s, b) => s + (b.totalPrice || 0), 0);
-  let html = `<div style="text-align:center"><h3>التقرير المالي</h3><p>الفترة: ${start || 'بداية'} - ${end || 'الحالي'}</p></div>
-    <table style="width:100%;border-collapse:collapse;margin-top:15px">
-    <tr style="background:#f1f5f9"><th style="padding:10px">العميل</th><th style="padding:10px">الوجهة</th><th style="padding:10px">التاريخ</th><th style="padding:10px">القيمة</th><th style="padding:10px">الموظف</th></tr>
-    ${filtered.map(b => `<tr><td style="padding:8px">${b.clientName}</td><td style="padding:8px">${b.country}</td><td style="padding:8px">${b.departureDate||'—'}</td><td style="padding:8px">${Math.round(b.totalPrice||0).toLocaleString()} JD</td><td style="padding:8px">${getEmployeeName(b.agentName)}</td></tr>`).join('')}
-    </table><div style="margin-top:15px;padding:10px;background:#f1f5f9"><strong>الإجمالي: ${Math.round(totalRev).toLocaleString()} JD</strong></div>`;
+  var start = document.getElementById('reportStart').value;
+  var end = document.getElementById('reportEnd').value;
+  var filtered = bookings.slice();
+  
+  if (start) filtered = filtered.filter(function(b) { return b.departureDate >= start; });
+  if (end) filtered = filtered.filter(function(b) { return b.departureDate <= end; });
+  
+  var totalRev = filtered.reduce(function(s, b) { return s + (b.totalPrice || 0); }, 0);
+  
+  var html = '<div style="text-align:center"><h3>التقرير المالي</h3>' +
+    '<p>الفترة: ' + (start || 'بداية') + ' - ' + (end || 'الحالي') + '</p>' +
+    '<p>تاريخ: ' + new Date().toLocaleDateString('ar-JO') + '</p></div>' +
+    '<table style="width:100%;border-collapse:collapse;margin-top:15px">' +
+    '<tr style="background:#f1f5f9"><th style="padding:10px">العميل</th><th style="padding:10px">الوجهة</th><th style="padding:10px">التاريخ</th><th style="padding:10px">القيمة</th><th style="padding:10px">الموظف</th></tr>';
+  
+  filtered.forEach(function(b) {
+    html += '<tr><td style="padding:8px">' + b.clientName + '</td>' +
+      '<td style="padding:8px">' + b.country + '</td>' +
+      '<td style="padding:8px">' + (b.departureDate || '—') + '</td>' +
+      '<td style="padding:8px">' + Math.round(b.totalPrice).toLocaleString() + ' JD</td>' +
+      '<td style="padding:8px">' + getEmployeeName(b.agentName) + '</td></tr>';
+  });
+  
+  html += '</table>' +
+    '<div style="margin-top:15px;padding:10px;background:#f1f5f9"><strong>الإجمالي: ' + 
+    Math.round(totalRev).toLocaleString() + ' JD</strong></div>';
+  
   document.getElementById('reportPreview').style.display = 'block';
   document.getElementById('reportPreview').innerHTML = html;
 }
 
-function printReport() { generateReport(); setTimeout(() => window.print(), 100); }
+function printReport() { 
+  generateReport(); 
+  setTimeout(function() { window.print(); }, 100); 
+}
 
 function exportToExcel() {
-  if (!bookings.length) { alert('لا توجد بيانات'); return; }
-  const ws = XLSX.utils.json_to_sheet(bookings.map(b => ({
-    'العميل': b.clientName, 'الهاتف': b.clientPhone, 'البريد': b.clientEmail, 'الدولة': b.country,
-    'المدينة': b.city, 'تاريخ المغادرة': b.departureDate, 'تاريخ العودة': b.returnDate,
-    'عدد المسافرين': b.travelers, 'الفندق': b.hotelName,
-    'الخدمات': (b.services||[]).map(s => s.name).join(', '),
-    'الإجمالي': b.totalPrice, 'المدفوع': b.paidAmount,
-    'الحالة': b.isConfirmed ? 'مؤكد' : 'قيد الانتظار',
-    'الموظف': getEmployeeName(b.agentName), 'ملاحظات': b.notes
-  })));
-  const wb = XLSX.utils.book_new();
+  if (!bookings.length) { 
+    alert('لا توجد بيانات'); 
+    return; 
+  }
+  
+  var data = bookings.map(function(b) {
+    return {
+      'العميل': b.clientName,
+      'الهاتف': b.clientPhone,
+      'البريد': b.clientEmail,
+      'الدولة': b.country,
+      'المدينة': b.city,
+      'تاريخ المغادرة': b.departureDate,
+      'تاريخ العودة': b.returnDate,
+      'عدد المسافرين': b.travelers,
+      'الفندق': b.hotelName,
+      'الخدمات': b.services ? b.services.map(function(s) { return s.name; }).join(', ') : '',
+      'الإجمالي': b.totalPrice,
+      'المدفوع': b.paidAmount,
+      'الحالة': b.isConfirmed ? 'مؤكد' : 'قيد الانتظار',
+      'الموظف': getEmployeeName(b.agentName),
+      'ملاحظات': b.notes
+    };
+  });
+  
+  var ws = XLSX.utils.json_to_sheet(data);
+  var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'الحجوزات');
-  XLSX.writeFile(wb, `حجوزات_${new Date().toISOString().split('T')[0]}.xlsx`);
+  XLSX.writeFile(wb, 'حجوزات_' + new Date().toISOString().split('T')[0] + '.xlsx');
+  alert('تم التصدير');
 }
 
 function exportCancelledToExcel() {
-  if (!cancelledBookings.length) { alert('لا توجد بيانات'; return; }
-  const ws = XLSX.utils.json_to_sheet(cancelledBookings.map(c => ({
-    'العميل': c.clientName, 'الدولة': c.country, 'تاريخ السفر': c.departureDate,
-    'الإجمالي': c.totalPrice, 'المدفوع': c.paidAmount, 'سبب الإلغاء': c.reason
-  })));
-  const wb = XLSX.utils.book_new();
+  if (!cancelledBookings.length) { 
+    alert('لا توجد بيانات'); 
+    return; 
+  }
+  
+  var data = cancelledBookings.map(function(c) {
+    return {
+      'العميل': c.clientName,
+      'الدولة': c.country,
+      'تاريخ السفر': c.departureDate,
+      'الإجمالي': c.totalPrice,
+      'المدفوع': c.paidAmount,
+      'سبب الإلغاء': c.reason
+    };
+  });
+  
+  var ws = XLSX.utils.json_to_sheet(data);
+  var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'الملغية');
-  XLSX.writeFile(wb, `ملغية_${new Date().toISOString().split('T')[0]}.xlsx`);
+  XLSX.writeFile(wb, 'ملغية_' + new Date().toISOString().split('T')[0] + '.xlsx');
+  alert('تم التصدير');
 }
 
 function exportJSON() {
-  const data = { bookings, cancelledBookings, users };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const link = document.createElement('a');
+  var data = { bookings: bookings, cancelledBookings: cancelledBookings, users: users };
+  var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  var link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.download = `dream_travel_${new Date().toISOString().split('T')[0]}.json`;
+  link.download = 'سفر_pro_' + new Date().toISOString().split('T')[0] + '.json';
   link.click();
   URL.revokeObjectURL(link.href);
 }
 
 function importJSON(input) {
-  const file = input.files[0];
+  var file = input.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async e => {
+  
+  var reader = new FileReader();
+  reader.onload = function(e) {
     try {
-      const data = JSON.parse(e.target.result);
+      var data = JSON.parse(e.target.result);
       if (data.bookings) bookings = data.bookings;
       if (data.cancelledBookings) cancelledBookings = data.cancelledBookings;
       if (data.users && currentUser?.role === 'admin') users = data.users;
-      await saveAllData();
-      renderAll();
-      alert('تم استيراد البيانات');
-    } catch (err) { alert('خطأ في الملف'); }
+      
+      saveAllData().then(function() {
+        renderAll();
+        alert('تم استيراد البيانات');
+      });
+    } catch (err) { 
+      alert('خطأ في الملف'); 
+    }
     input.value = '';
   };
   reader.readAsText(file);
@@ -924,12 +1312,18 @@ function renderAll() {
 }
 
 function showTab(tab) {
-  const tabs = ['dashboard','bookings','cancelled','clients','add','reports','trips','users'];
-  tabs.forEach(t => {
-    const el = document.getElementById(`tab-${t}`);
+  var tabs = ['dashboard', 'bookings', 'cancelled', 'clients', 'add', 'reports', 'trips', 'users'];
+  
+  tabs.forEach(function(t) {
+    var el = document.getElementById('tab-' + t);
     if (el) el.style.display = t === tab ? '' : 'none';
   });
-  document.querySelectorAll('.tab').forEach((el, i) => el.classList.toggle('active', tabs[i] === tab));
+  
+  var tabButtons = document.querySelectorAll('.tab');
+  tabButtons.forEach(function(el, i) {
+    el.classList.toggle('active', tabs[i] === tab);
+  });
+  
   if (tab === 'dashboard') updateDashboard();
   if (tab === 'bookings') renderBookings();
   if (tab === 'cancelled') renderCancelled();
@@ -940,74 +1334,115 @@ function showTab(tab) {
 
 // ==================== برنامج الرحلات ====================
 function renderTripDocs() {
-  const grid = document.getElementById('tripsGrid');
-  const uploadCard = document.getElementById('tripsUploadCard');
+  var grid = document.getElementById('tripsGrid');
+  var uploadCard = document.getElementById('tripsUploadCard');
+  
   if (!grid) return;
-  if (uploadCard) uploadCard.style.display = currentUser?.role === 'admin' ? '' : 'none';
+  
+  if (uploadCard) {
+    uploadCard.style.display = currentUser?.role === 'admin' ? '' : 'none';
+  }
+
   if (!tripDocs.length) {
     grid.innerHTML = '<div class="empty"><i class="ti ti-files" style="font-size:40px;display:block;margin-bottom:10px"></i>لا توجد برامج رحلات بعد</div>';
     return;
   }
-  grid.innerHTML = tripDocs.map((doc, idx) => `
-    <div class="trip-card">
-      <div>
-        <div class="trip-card-title">📄 ${doc.title}</div>
-        ${doc.desc ? `<div style="font-size:12px;color:#64748b;margin-top:4px">${doc.desc}</div>` : ''}
-        <div class="trip-card-date">📅 ${new Date(doc.uploadedAt).toLocaleDateString('ar-SA')} | بواسطة: ${doc.uploadedBy || 'المدير'}</div>
-      </div>
-      <button class="trip-pdf-btn" onclick="openTripDoc(${idx})"><i class="ti ti-eye"></i> عرض البرنامج</button>
-      ${currentUser?.role === 'admin' ? `<button class="btn btn-red" style="font-size:12px;padding:5px 14px" onclick="deleteTripDoc(${idx})">🗑️ حذف</button>` : ''}
-    </div>
-  `).join('');
+  
+  var html = '';
+  tripDocs.forEach(function(doc, idx) {
+    html += '<div class="trip-card">';
+    html += '<div>';
+    html += '<div class="trip-card-title">📄 ' + doc.title + '</div>';
+    if (doc.desc) html += '<div style="font-size:12px;color:#64748b;margin-top:4px">' + doc.desc + '</div>';
+    html += '<div class="trip-card-date">📅 ' + new Date(doc.uploadedAt).toLocaleDateString('ar-JO') + 
+      ' | بواسطة: ' + (doc.uploadedBy || 'المدير') + '</div>';
+    html += '</div>';
+    html += '<button class="trip-pdf-btn" onclick="openTripDoc(' + idx + ')"><i class="ti ti-eye"></i> عرض البرنامج</button>';
+    if (currentUser?.role === 'admin') {
+      html += '<button class="btn btn-red" style="font-size:12px;padding:5px 14px" onclick="deleteTripDoc(' + idx + ')">🗑️ حذف</button>';
+    }
+    html += '</div>';
+  });
+  grid.innerHTML = html;
 }
 
 function openTripDoc(idx) {
-  const doc = tripDocs[idx];
-  if (!doc || !doc.data) { alert('الملف غير متاح'); return; }
-  const byteChars = atob(doc.data);
-  const byteArr = new Uint8Array(byteChars.length);
-  for (let i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i);
-  const blob = new Blob([byteArr], { type: 'application/pdf' });
-  const url = URL.createObjectURL(blob);
+  var doc = tripDocs[idx];
+  if (!doc || !doc.data) { 
+    alert('الملف غير متاح'); 
+    return; 
+  }
+  
+  var byteChars = atob(doc.data);
+  var byteArr = new Uint8Array(byteChars.length);
+  for (var i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i);
+  
+  var blob = new Blob([byteArr], { type: 'application/pdf' });
+  var url = URL.createObjectURL(blob);
   window.open(url, '_blank');
-  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  setTimeout(function() { URL.revokeObjectURL(url); }, 10000);
 }
 
-async function deleteTripDoc(idx) {
+function deleteTripDoc(idx) {
   if (currentUser?.role !== 'admin') return;
   if (!confirm('هل تريد حذف هذا البرنامج؟')) return;
+  
   tripDocs.splice(idx, 1);
-  await saveAllData();
-  renderTripDocs();
+  saveAllData().then(function() { renderTripDocs(); });
 }
 
 function handleTripFileSelect(input) {
-  const file = input.files[0];
+  var file = input.files[0];
   if (!file) return;
-  if (file.size > 5 * 1024 * 1024) { alert('الملف أكبر من 5 ميجابايت'); input.value = ''; return; }
-  if (file.type !== 'application/pdf') { alert('يجب أن يكون الملف بصيغة PDF'); input.value = ''; return; }
+  
+  if (file.size > 5 * 1024 * 1024) { 
+    alert('الملف أكبر من 5 ميجابايت'); 
+    input.value = ''; 
+    return; 
+  }
+  
+  if (file.type !== 'application/pdf') { 
+    alert('يجب أن يكون الملف بصيغة PDF'); 
+    input.value = ''; 
+    return; 
+  }
+  
   selectedTripFile = file;
-  document.getElementById('uploadZone').innerHTML = `<i class="ti ti-check" style="font-size:40px;margin-bottom:10px;color:#059669"></i><div style="color:#059669;font-weight:600">${file.name}</div><div style="font-size:11px;margin-top:5px">${(file.size/1024).toFixed(0)} KB</div>`;
+  document.getElementById('uploadZone').innerHTML = 
+    '<i class="ti ti-check" style="font-size:40px;margin-bottom:10px;color:#059669"></i>' +
+    '<div style="color:#059669;font-weight:600">' + file.name + '</div>' +
+    '<div style="font-size:11px;margin-top:5px">' + (file.size/1024).toFixed(0) + ' KB</div>';
 }
 
 async function uploadTripDoc() {
-  if (!selectedTripFile) { alert('اختر ملف PDF أولاً'); return; }
-  const title = document.getElementById('tripDocTitle').value.trim();
-  if (!title) { alert('أدخل عنوان البرنامج'); return; }
-  const desc = document.getElementById('tripDocDesc').value.trim();
+  if (!selectedTripFile) { 
+    alert('اختر ملف PDF أولاً'); 
+    return; 
+  }
+  
+  var title = document.getElementById('tripDocTitle').value.trim();
+  if (!title) { 
+    alert('أدخل عنوان البرنامج'); 
+    return; 
+  }
+  
+  var desc = document.getElementById('tripDocDesc').value.trim();
 
   document.getElementById('uploadProgress').style.display = '';
   document.getElementById('uploadBar').style.width = '30%';
   document.getElementById('uploadMsg').textContent = 'جاري تحويل الملف...';
 
-  const reader = new FileReader();
-  reader.onload = async e => {
-    const base64 = e.target.result.split(',')[1];
+  var reader = new FileReader();
+  reader.onload = async function(e) {
+    var base64 = e.target.result.split(',')[1];
     document.getElementById('uploadBar').style.width = '70%';
-    document.getElementById('uploadMsg').textContent = 'جاري الحفظ...';
+    document.getElementById('uploadMsg').textContent = 'جاري الرفع...';
 
     tripDocs.unshift({
-      id: Date.now().toString(), title, desc, data: base64,
+      id: Date.now().toString(),
+      title: title,
+      desc: desc,
+      data: base64,
       fileName: selectedTripFile.name,
       uploadedAt: Date.now(),
       uploadedBy: currentUser?.fullName || 'المدير'
@@ -1016,13 +1451,17 @@ async function uploadTripDoc() {
     await saveAllData();
     document.getElementById('uploadBar').style.width = '100%';
     document.getElementById('uploadMsg').textContent = '✅ تم الرفع بنجاح!';
-    setTimeout(() => {
+    
+    setTimeout(function() {
       document.getElementById('uploadProgress').style.display = 'none';
       document.getElementById('uploadBar').style.width = '0%';
       document.getElementById('tripDocTitle').value = '';
       document.getElementById('tripDocDesc').value = '';
       document.getElementById('tripFileInput').value = '';
-      document.getElementById('uploadZone').innerHTML = `<i class="ti ti-file-type-pdf" style="font-size:40px;margin-bottom:10px"></i><div>اضغط لاختيار ملف PDF</div><div style="font-size:11px;margin-top:5px">الحد الأقصى: 5 ميجابايت</div>`;
+      document.getElementById('uploadZone').innerHTML = 
+        '<i class="ti ti-file-type-pdf" style="font-size:40px;margin-bottom:10px"></i>' +
+        '<div>اضغط لاختيار ملف PDF</div>' +
+        '<div style="font-size:11px;margin-top:5px">الحد الأقصى: 5 ميجابايت</div>';
       selectedTripFile = null;
       renderTripDocs();
     }, 1500);
@@ -1031,35 +1470,47 @@ async function uploadTripDoc() {
 }
 
 // ==================== بدء التشغيل ====================
-document.getElementById('topbar-date').innerHTML = new Date().toLocaleDateString('ar-SA');
+document.addEventListener('DOMContentLoaded', function() {
+  // تعيين التاريخ
+  var dateEl = document.getElementById('topbar-date');
+  if (dateEl) {
+    dateEl.textContent = new Date().toLocaleDateString('ar-JO');
+  }
 
-(async () => {
-  // التحقق من جلسة محفوظة
-  const session = localStorage.getItem('current_session');
+  // إضافة خدمة افتراضية
+  addService();
+
+  // تحديث حالة المزامنة
+  updateSyncStatus('', 'جاري التحميل...');
+
+  // التحقق من الجلسة
+  var session = localStorage.getItem('current_session');
   if (session) {
     try {
-      const s = JSON.parse(session);
-      // جلب المستخدمين للتحقق من صحة الجلسة
-      const res = await fetch(GS_URL + '?action=users');
-      const data = await res.json();
-      users = data.users || [];
-      const u = users.find(u => u.username === s.username);
-      if (u) {
-        currentUser = u;
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        document.getElementById('currentUserName').textContent = u.fullName || u.username;
-        document.getElementById('tabUsers').style.display = u.role === 'admin' ? '' : 'none';
-        await loadAllData();
-        renderAll();
-      } else {
-        localStorage.removeItem('current_session');
-      }
-    } catch(e) {
+      var s = JSON.parse(session);
+      loadAllData().then(function() {
+        var u = users.find(function(user) { return user.username === s.username; });
+        if (u) {
+          currentUser = u;
+          document.getElementById('loginScreen').style.display = 'none';
+          document.getElementById('mainApp').style.display = 'block';
+          document.getElementById('currentUserName').textContent = u.fullName;
+          renderAll();
+          updateSyncStatus('ok', 'مرحباً ' + u.fullName);
+        } else {
+          localStorage.removeItem('current_session');
+          updateSyncStatus('', 'يرجى تسجيل الدخول');
+        }
+      });
+    } catch (e) {
       localStorage.removeItem('current_session');
+      updateSyncStatus('', 'يرجى تسجيل الدخول');
     }
+  } else {
+    updateSyncStatus('', 'يرجى تسجيل الدخول');
   }
-})();
+});
+
 </script>
 </body>
 </html>
