@@ -924,35 +924,29 @@ async function syncWithSheet() {
   updateSyncStatus('syncing');
   
   try {
+    // جلب التغييرات من الشيت
     const res = await fetch(GS_URL + '?action=sync&lastSync=' + lastSyncTime);
     const data = await res.json();
     
     if (data.success) {
-      // تطبيق التغييرات على المصفوفات المحلية
+      // تحديث البيانات المحلية
       if (data.changes) {
         // تحديث الحجوزات
-        if (data.changes.updated) {
+        if (data.changes.updated && data.changes.updated.length > 0) {
           data.changes.updated.forEach(function(item) {
-            var idx = bookings.findIndex(b => b.id === item.id);
+            const idx = bookings.findIndex(b => b.id === item.id);
             if (idx !== -1) bookings[idx] = item;
             else bookings.push(item);
           });
-        }
-        
-        // تحديث الملغية
-        if (data.changes.cancelled) {
-          // سيتم تنفيذها في المستقبل
-        }
-        
-        // تحديث المستخدمين
-        if (data.changes.users) {
-          // سيتم تنفيذها في المستقبل
         }
       }
       
       // تحديث وقت المزامنة
       lastSyncTime = data.lastSyncTime;
+      localStorage.setItem('lastSyncTime', lastSyncTime);
       
+      // إعادة تحميل البيانات بالكامل (لضمان الاتساق)
+      await loadAllData();
       renderAll();
       updateSyncStatus('ok');
     }
@@ -1097,6 +1091,10 @@ async function uploadTripDoc() {
 // ==================== بدء التشغيل ====================
 // ================================================================
 (async function init() {
+  // استعادة وقت المزامنة من localStorage
+  const savedSyncTime = localStorage.getItem('lastSyncTime');
+  if (savedSyncTime) lastSyncTime = parseInt(savedSyncTime);
+  
   await loadAllData();
   const session = localStorage.getItem('current_session');
   if (session) {
