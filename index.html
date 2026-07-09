@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -304,6 +305,7 @@ let currentUser = null;
 let charts = {};
 let selectedTripFile = null;
 let lastSyncTime = 0;
+let currentActionId = null;
 
 const availableServices = ["🚗 نقل مطار", "📱 شريحة اتصال", "🗺️ جولة سياحية"];
 
@@ -320,12 +322,13 @@ function hashPassword(password) {
 async function loadAllData() {
   try {
     const res = await fetch(GS_URL + "?action=read");
+    if (!res.ok) throw new Error('فشل الاتصال بالخادم');
     const data = await res.json();
     users = data.users || [];
     bookings = data.bookings || [];
     cancelledBookings = data.cancelled || [];
     tripDocs = data.trips || [];
-    console.log("✅ تم تحميل البيانات:", data);
+    console.log("✅ تم تحميل البيانات:", { users: users.length, bookings: bookings.length, trips: tripDocs.length });
     return true;
   } catch (err) {
     console.error("❌ خطأ في تحميل البيانات:", err);
@@ -367,29 +370,39 @@ async function login() {
   }
 
   try {
-    const res = await fetch(GS_URL + '?action=users');
-    const data = await res.json();
-    users = data.users || [];
+    // إرسال طلب تسجيل الدخول إلى الخادم
+    const res = await fetch(GS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'login',
+        username: username,
+        password: password
+      })
+    });
+    
+    const result = await res.json();
 
-    const passwordHash = hashPassword(password);
-    const user = users.find(u => u.username === username && u.passwordHash === passwordHash);
-
-    if (user) {
-      currentUser = user;
-      localStorage.setItem('current_session', JSON.stringify(user));
+    if (result.success) {
+      currentUser = result.user;
+      localStorage.setItem('current_session', JSON.stringify(currentUser));
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('mainApp').style.display = 'block';
-      document.getElementById('currentUserName').textContent = user.fullName || user.username;
+      document.getElementById('currentUserName').textContent = currentUser.fullName || currentUser.username;
       document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('ar-JO');
+      
+      // تحميل البيانات بعد تسجيل الدخول
+      await loadAllData();
       renderAll();
+      startAutoSync(30000);
       errorBox.style.display = 'none';
     } else {
       errorBox.style.display = 'block';
-      errorBox.textContent = '❌ اسم المستخدم أو كلمة السر غير صحيحة';
+      errorBox.textContent = '❌ ' + (result.error || 'اسم المستخدم أو كلمة السر غير صحيحة');
     }
   } catch (err) {
     errorBox.style.display = 'block';
-    errorBox.textContent = '⚠️ خطأ في الاتصال بالخادم';
+    errorBox.textContent = '⚠️ خطأ في الاتصال بالخادم: ' + err.message;
     console.error(err);
   }
 }
@@ -404,6 +417,7 @@ function logout() {
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('loginUsername').value = '';
   document.getElementById('loginPassword').value = '';
+  stopAutoSync();
 }
 
 // ================================================================
@@ -577,7 +591,7 @@ function renderClients() {
 }
 
 // ================================================================
-// ==================== حفظ الحجز (نسخة آمنة) ====================
+// ==================== حفظ الحجز ====================
 // ================================================================
 async function saveBooking() {
   const name = document.getElementById('clientName').value.trim();
@@ -630,9 +644,9 @@ async function saveBooking() {
     clearForm();
     renderAll();
     showTab('bookings');
-    alert('✅ تم حفظ الحجز بنجاح في الشيت');
+    alert('✅ تم حفظ الحجز بنجاح');
   } else {
-    alert('❌ فشل في حفظ البيانات في الشيت. يرجى المحاولة مرة أخرى');
+    alert('❌ فشل في حفظ البيانات');
     bookings.shift();
   }
 }
@@ -683,6 +697,7 @@ function clearForm() {
 // ==================== تأكيد وإلغاء ====================
 // ================================================================
 function openConfirmModal(id) {
+  currentActionId = id;
   const b = bookings.find(b => b.id === id);
   if (!b) return;
   document.getElementById('confirmInfo').innerHTML = `<p><strong>${b.clientName}</strong></p><p>💰 ${b.totalPrice} JD | 💵 المدفوع: ${b.paidAmount} JD</p>`;
@@ -700,6 +715,7 @@ async function confirmBooking() {
 }
 
 function openCancelModal(id) {
+  currentActionId = id;
   const b = bookings.find(b => b.id === id);
   if (!b) return;
   document.getElementById('cancelInfo').innerHTML = `<p><strong>${b.clientName}</strong></p><p>💰 ${b.totalPrice} JD</p>`;
@@ -788,8 +804,8 @@ function generateReport() {
   if (end) filtered = filtered.filter(b => b.departureDate <= end);
   const totalRev = filtered.reduce((s, b) => s + (b.totalPrice || 0), 0);
   let html = `<div style="text-align:center"><h3>التقرير المالي</h3><p>الفترة: ${start || 'بداية'} - ${end || 'الحالي'}</p><p>تاريخ: ${new Date().toLocaleDateString('ar-JO')}</p></div>
-    <table style="width:100%;border-collapse:collapse;margin-top:15px"><tr style="background:#f1f5f9"><th style="padding:10px">العميل</th><th style="padding:10px">الوجهة</th><th style="padding:10px">التاريخ</th><th style="padding:10px">القيمة</th><th style="padding:10px">الموظف</th></td>
-    ${filtered.map(b => `<tr><td style="padding:8px">${b.clientName}</td><td style="padding:8px">${b.country}</td><td style="padding:8px">${b.departureDate || '—'}<tr><td style="padding:8px">${Math.round(b.totalPrice).toLocaleString()} JD</td><td style="padding:8px">${getEmployeeName(b.agentName)}</td></tr>`).join('')}
+    <table style="width:100%;border-collapse:collapse;margin-top:15px"><tr style="background:#f1f5f9"><th style="padding:10px">العميل</th><th style="padding:10px">الوجهة</th><th style="padding:10px">التاريخ</th><th style="padding:10px">القيمة</th><th style="padding:10px">الموظف</th></tr>
+    ${filtered.map(b => `<tr><td style="padding:8px">${b.clientName}</td><td style="padding:8px">${b.country}</td><td style="padding:8px">${b.departureDate || '—'}</td><td style="padding:8px">${Math.round(b.totalPrice).toLocaleString()} JD</td><td style="padding:8px">${getEmployeeName(b.agentName)}</td></tr>`).join('')}
     </table><div style="margin-top:15px;padding:10px;background:#f1f5f9"><strong>الإجمالي: ${Math.round(totalRev).toLocaleString()} JD</strong></div>`;
   document.getElementById('reportPreview').style.display = 'block';
   document.getElementById('reportPreview').innerHTML = html;
@@ -874,11 +890,6 @@ function showTab(tab) {
   });
   document.querySelectorAll('.tab').forEach((el, i) => el.classList.toggle('active', tabs[i] === tab));
   
-  // مزامنة عند فتح تبويبات البيانات
-  if (tab === 'bookings' || tab === 'cancelled' || tab === 'clients' || tab === 'dashboard' || tab === 'users') {
-    syncWithSheet();
-  }
-  
   if (tab === 'dashboard') updateDashboard();
   if (tab === 'bookings') renderBookings();
   if (tab === 'cancelled') renderCancelled();
@@ -924,32 +935,9 @@ async function syncWithSheet() {
   updateSyncStatus('syncing');
   
   try {
-    // جلب التغييرات من الشيت
-    const res = await fetch(GS_URL + '?action=sync&lastSync=' + lastSyncTime);
-    const data = await res.json();
-    
-    if (data.success) {
-      // تحديث البيانات المحلية
-      if (data.changes) {
-        // تحديث الحجوزات
-        if (data.changes.updated && data.changes.updated.length > 0) {
-          data.changes.updated.forEach(function(item) {
-            const idx = bookings.findIndex(b => b.id === item.id);
-            if (idx !== -1) bookings[idx] = item;
-            else bookings.push(item);
-          });
-        }
-      }
-      
-      // تحديث وقت المزامنة
-      lastSyncTime = data.lastSyncTime;
-      localStorage.setItem('lastSyncTime', lastSyncTime);
-      
-      // إعادة تحميل البيانات بالكامل (لضمان الاتساق)
-      await loadAllData();
-      renderAll();
-      updateSyncStatus('ok');
-    }
+    await loadAllData();
+    renderAll();
+    updateSyncStatus('ok');
   } catch (err) {
     console.error('❌ فشل المزامنة:', err);
     updateSyncStatus('error');
@@ -973,7 +961,7 @@ function stopAutoSync() {
 }
 
 // ================================================================
-// ==================== برنامج الرحلات (مع Google Drive) ====================
+// ==================== برنامج الرحلات ====================
 // ================================================================
 
 function renderTripDocs() {
@@ -987,7 +975,7 @@ function renderTripDocs() {
     return;
   }
   
-  grid.innerHTML = tripDocs.map((doc, idx) => `
+  grid.innerHTML = tripDocs.map(doc => `
     <div class="trip-card">
       <div>
         <div class="trip-card-title">📄 ${doc.title}</div>
@@ -1091,28 +1079,46 @@ async function uploadTripDoc() {
 // ==================== بدء التشغيل ====================
 // ================================================================
 (async function init() {
-  // استعادة وقت المزامنة من localStorage
   const savedSyncTime = localStorage.getItem('lastSyncTime');
   if (savedSyncTime) lastSyncTime = parseInt(savedSyncTime);
   
   await loadAllData();
+  
   const session = localStorage.getItem('current_session');
   if (session) {
-    const s = JSON.parse(session);
-    const u = users.find(u => u.username === s.username);
-    if (u) {
-      currentUser = u;
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('mainApp').style.display = 'block';
-      document.getElementById('currentUserName').textContent = u.fullName || u.username;
-      document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('ar-JO');
-      renderAll();
-      // بدء المزامنة التلقائية كل 30 ثانية
-      startAutoSync(30000);
-    } else {
-      localStorage.removeItem('current_session');
+    try {
+      const s = JSON.parse(session);
+      // التحقق من صحة الجلسة عبر الخادم
+      const res = await fetch(GS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'login',
+          username: s.username,
+          password: '' // سيتم رفضها لكن نتحقق من وجود المستخدم
+        })
+      });
+      const result = await res.json();
+      
+      if (result.success) {
+        currentUser = result.user;
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        document.getElementById('currentUserName').textContent = currentUser.fullName || currentUser.username;
+        document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('ar-JO');
+        renderAll();
+        startAutoSync(30000);
+        return;
+      }
+    } catch (err) {
+      console.warn('انتهت صلاحية الجلسة:', err);
     }
+    localStorage.removeItem('current_session');
   }
+  
+  // عرض شاشة تسجيل الدخول
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('mainApp').style.display = 'none';
 })();
 </script>
 </body>
