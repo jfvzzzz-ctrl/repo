@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dream Travel-KSA | نظام إدارة الحجوزات</title>
-<!-- المكتبات -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -357,7 +356,7 @@ async function saveAllData() {
 }
 
 // ================================================================
-// ==================== (5) تسجيل الدخول (GET مع تشفير) ====================
+// ==================== (5) تسجيل الدخول (النصيحة الأساسية) ====================
 // ================================================================
 async function login() {
   const username = document.getElementById('loginUsername').value.trim();
@@ -371,8 +370,8 @@ async function login() {
   }
 
   try {
-    const passwordHash = hashPassword(password);
-    const url = `${GS_URL}?action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(passwordHash)}`;
+    // ✅ إرسال كلمة المرور نصية (غير مشفرة) لأن الخادم سيتولى التشفير
+    const url = `${GS_URL}?action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
     const res = await fetch(url);
     const result = await res.json();
 
@@ -1004,7 +1003,6 @@ async function uploadTripDoc() {
     document.getElementById('uploadMsg').textContent = 'جاري الرفع...';
 
     try {
-      // استخدم GET لرفع الملف (لأن POST يعطي مشاكل CORS)
       const url = `${GS_URL}?action=uploadFile&fileName=${encodeURIComponent(selectedTripFile.name)}&mimeType=${encodeURIComponent(selectedTripFile.type)}&fileData=${encodeURIComponent(base64)}&title=${encodeURIComponent(title)}&desc=${encodeURIComponent(desc)}&uploadedBy=${encodeURIComponent(currentUser?.fullName || 'المدير')}`;
       const res = await fetch(url);
       const result = await res.json();
@@ -1048,7 +1046,7 @@ async function uploadTripDoc() {
   if (session) {
     try {
       const s = JSON.parse(session);
-      // التحقق من صحة الجلسة (نرسل كلمة مرور فارغة، لكن الخادم سيتحقق من وجود المستخدم)
+      // التحقق من الجلسة (نرسل كلمة مرور فارغة، الخادم سيرفضها لكننا نتحقق من وجود المستخدم)
       const url = `${GS_URL}?action=login&username=${encodeURIComponent(s.username)}&password=`;
       const res = await fetch(url);
       const result = await res.json();
