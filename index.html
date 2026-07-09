@@ -316,7 +316,7 @@ function hashPassword(password) {
 }
 
 // ================================================================
-// ==================== تحميل البيانات ====================
+// ==================== تحميل البيانات (GET) ====================
 // ================================================================
 async function loadAllData() {
   try {
@@ -336,16 +336,14 @@ async function loadAllData() {
 }
 
 // ================================================================
-// ==================== حفظ البيانات ====================
+// ==================== حفظ البيانات (GET مع encodeURIComponent) ====================
 // ================================================================
 async function saveAllData() {
   try {
     const data = { bookings, cancelled: cancelledBookings, users, trips: tripDocs };
-    const res = await fetch(GS_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'write', data: data })
-    });
+    const jsonData = JSON.stringify(data);
+    const url = `${GS_URL}?action=write&data=${encodeURIComponent(jsonData)}`;
+    const res = await fetch(url);
     const result = await res.json();
     return result.success === true;
   } catch (err) {
@@ -355,7 +353,7 @@ async function saveAllData() {
 }
 
 // ================================================================
-// ==================== تسجيل الدخول ====================
+// ==================== تسجيل الدخول (GET) ====================
 // ================================================================
 async function login() {
   const username = document.getElementById('loginUsername').value.trim();
@@ -369,17 +367,9 @@ async function login() {
   }
 
   try {
-    // إرسال طلب تسجيل الدخول إلى الخادم
-    const res = await fetch(GS_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'login',
-        username: username,
-        password: password
-      })
-    });
-    
+    const passwordHash = hashPassword(password);
+    const url = `${GS_URL}?action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+    const res = await fetch(url);
     const result = await res.json();
 
     if (result.success) {
@@ -390,7 +380,6 @@ async function login() {
       document.getElementById('currentUserName').textContent = currentUser.fullName || currentUser.username;
       document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('ar-JO');
       
-      // تحميل البيانات بعد تسجيل الدخول
       await loadAllData();
       renderAll();
       startAutoSync(30000);
@@ -898,7 +887,7 @@ function showTab(tab) {
 }
 
 // ================================================================
-// ==================== نظام المزامنة الذكية ====================
+// ==================== نظام المزامنة الذكية (GET) ====================
 // ================================================================
 
 let syncInterval = null;
@@ -934,7 +923,15 @@ async function syncWithSheet() {
   updateSyncStatus('syncing');
   
   try {
-    await loadAllData();
+    // GET request لقراءة البيانات
+    const res = await fetch(GS_URL + '?action=read');
+    const data = await res.json();
+    
+    if (data.bookings) bookings = data.bookings;
+    if (data.cancelled) cancelledBookings = data.cancelled;
+    if (data.users) users = data.users;
+    if (data.trips) tripDocs = data.trips;
+    
     renderAll();
     updateSyncStatus('ok');
   } catch (err) {
@@ -1031,21 +1028,9 @@ async function uploadTripDoc() {
     document.getElementById('uploadBar').style.width = '70%';
     document.getElementById('uploadMsg').textContent = 'جاري الرفع...';
 
-    const formData = new URLSearchParams();
-    formData.append('action', 'uploadFile');
-    formData.append('fileName', selectedTripFile.name);
-    formData.append('mimeType', selectedTripFile.type);
-    formData.append('fileData', base64);
-    formData.append('title', title);
-    formData.append('desc', desc);
-    formData.append('uploadedBy', currentUser?.fullName || 'المدير');
-
     try {
-      const res = await fetch(GS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formData
-      });
+      const url = `${GS_URL}?action=uploadFile&fileName=${encodeURIComponent(selectedTripFile.name)}&mimeType=${encodeURIComponent(selectedTripFile.type)}&fileData=${encodeURIComponent(base64)}&title=${encodeURIComponent(title)}&desc=${encodeURIComponent(desc)}&uploadedBy=${encodeURIComponent(currentUser?.fullName || 'المدير')}`;
+      const res = await fetch(url);
       const result = await res.json();
 
       if (result.success) {
@@ -1075,7 +1060,7 @@ async function uploadTripDoc() {
 }
 
 // ================================================================
-// ==================== بدء التشغيل ====================
+// ==================== بدء التشغيل (GET للتحقق من الجلسة) ====================
 // ================================================================
 (async function init() {
   const savedSyncTime = localStorage.getItem('lastSyncTime');
@@ -1087,16 +1072,8 @@ async function uploadTripDoc() {
   if (session) {
     try {
       const s = JSON.parse(session);
-      // التحقق من صحة الجلسة عبر الخادم
-      const res = await fetch(GS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'login',
-          username: s.username,
-          password: '' // سيتم رفضها لكن نتحقق من وجود المستخدم
-        })
-      });
+      const url = `${GS_URL}?action=login&username=${encodeURIComponent(s.username)}&password=`;
+      const res = await fetch(url);
       const result = await res.json();
       
       if (result.success) {
@@ -1115,7 +1092,6 @@ async function uploadTripDoc() {
     localStorage.removeItem('current_session');
   }
   
-  // عرض شاشة تسجيل الدخول
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('mainApp').style.display = 'none';
 })();
