@@ -568,6 +568,7 @@ function renderClients() {
 // ================================================================
 // ==================== حفظ الحجز ====================
 // ================================================================
+  
 async function saveBooking() {
   const name = document.getElementById('clientName').value.trim();
   const country = document.getElementById('country').value;
@@ -612,17 +613,20 @@ async function saveBooking() {
     createdAt: Date.now()
   };
  
-  bookings.unshift(booking);
-  const saved = await saveAllData();
+  // استخدام addBooking بدلاً من saveAllData
+  const result = await addBookingToSheet(booking);
  
-  if (saved) {
+  if (result.success) {
+    // إضافة الحجز محلياً لعرضه فوراً
+    bookings.unshift(booking);
     clearForm();
     renderAll();
     showTab('bookings');
     alert('✅ تم حفظ الحجز بنجاح');
+    // تحديث المزامنة للحصول على المعرف الفعلي من الخادم إن أمكن
+    await syncWithSheet();
   } else {
-    alert('❌ فشل في حفظ البيانات، يرجى المحاولة مرة أخرى');
-    bookings.shift();
+    alert('❌ فشل في حفظ البيانات: ' + (result.error || 'خطأ غير معروف'));
   }
 }
 
