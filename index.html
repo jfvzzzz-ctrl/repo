@@ -686,33 +686,62 @@ function openConfirmModal(id) {
 }
 
 async function confirmBooking() {
-  const b = bookings.find(b => b.id === currentActionId);
-  if (!b) return;
-  b.isConfirmed = true;
-  await saveAllData();
-  closeConfirmModal();
-  renderAll();
-  alert('✅ تم تأكيد الحجز');
-}
+  if (!currentActionId) return;
+  try {
+    const res = await fetch(GS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'confirmBooking', id: currentActionId })
+    });
+    const result = await res.json();
+    if (result.success) {
+      // تحديث الحجز محلياً
+      const b = bookings.find(b => b.id === currentActionId);
+      if (b) b.isConfirmed = true;
+      closeConfirmModal();
+      renderAll();
+      alert('✅ تم تأكيد الحجز');
+    } else {
+      alert('❌ فشل التأكيد: ' + result.error);
+    }
+  } catch (err) {
+    alert('خطأ في الاتصال');
+  }
 
 function openCancelModal(id) {
   currentActionId = id;
   const b = bookings.find(b => b.id === id);
   if (!b) return;
-  document.getElementById('cancelInfo').innerHTML = `<p><strong>${b.clientName}</strong></p><p>💰 ${b.totalPrice} JD</p>`;
-  document.getElementById('cancelModal').classList.add('open');
+  document.getElementById('cancelInfo').innerHTML = `<p><strong>${b.clientName}</strong></p><p>💰 ${b.totalPrice} J/p>`;
+  document.getElementById('cancelModal').classList.add('open');D<
 }
 
 async function confirmCancel() {
-  const b = bookings.find(b => b.id === currentActionId);
-  if (!b) return;
+  if (!currentActionId) return;
   const reason = document.getElementById('cancelReason').value;
-  cancelledBookings.push({ ...b, reason: reason, cancelledAt: Date.now() });
-  bookings = bookings.filter(b => b.id !== currentActionId);
-  await saveAllData();
-  closeCancelModal();
-  renderAll();
-  alert('✅ تم إلغاء الحجز');
+  try {
+    const res = await fetch(GS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'cancelBooking', id: currentActionId, reason: reason })
+    });
+    const result = await res.json();
+    if (result.success) {
+      // تحديث محلي: نقل الحجز إلى الملغاة
+      const b = bookings.find(b => b.id === currentActionId);
+      if (b) {
+        cancelledBookings.push({ ...b, reason: reason, cancelledAt: Date.now() });
+        bookings = bookings.filter(b => b.id !== currentActionId);
+      }
+      closeCancelModal();
+      renderAll();
+      alert('✅ تم إلغاء الحجز');
+    } else {
+      alert('❌ فشل الإلغاء: ' + result.error);
+    }
+  } catch (err) {
+    alert('خطأ في الاتصال');
+  }
 }
 
 function closeConfirmModal() { document.getElementById('confirmModal').classList.remove('open'); }
