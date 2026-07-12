@@ -8,10 +8,9 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ====== الأنماط ====== */
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Cairo',sans-serif;background:#f0f4f8;color:#1e293b}
 .topbar{background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:#fff;padding:15px 25px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
@@ -97,7 +96,6 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
 </head>
 <body>
 
-<!-- ====== شاشة تسجيل الدخول ====== -->
 <div id="loginScreen" class="login-container">
   <div class="login-box">
     <i class="ti ti-plane-tilt" style="font-size:48px;color:#0f172a"></i>
@@ -109,9 +107,7 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
   </div>
 </div>
 
-<!-- ====== الواجهة الرئيسية ====== -->
 <div id="mainApp" style="display:none">
-  <!-- الشريط العلوي -->
   <div class="topbar">
     <div class="topbar-title"><i class="ti ti-plane-tilt"></i> Dream Travel-KSA <span class="topbar-badge">نظام إدارة الحجوزات</span></div>
     <div style="display:flex;align-items:center;gap:15px">
@@ -126,7 +122,6 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
   </div>
 
   <div class="container">
-    <!-- الأزرار العلوية -->
     <div class="tabs">
       <button class="tab active" onclick="showTab('dashboard')">لوحة التحكم</button>
       <button class="tab" onclick="showTab('bookings')">الحجوزات</button>
@@ -144,7 +139,6 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
       <label class="btn btn-outline" style="cursor:pointer">📤 استيراد JSON<input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(this)"></label>
     </div>
 
-    <!-- Dashboard -->
     <div id="tab-dashboard">
       <div class="stats-grid" id="dashboardStats"></div>
       <div class="chart-row">
@@ -157,7 +151,6 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
       </div>
     </div>
 
-    <!-- الحجوزات -->
     <div id="tab-bookings" style="display:none">
       <div class="stats-grid" id="bookingsStats"></div>
       <div class="filter-row">
@@ -174,19 +167,16 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
       <div class="blist" id="bookingsList"></div>
     </div>
 
-    <!-- الملغية -->
     <div id="tab-cancelled" style="display:none">
       <div class="stats-grid" id="cancelledStats"></div>
       <div class="filter-row"><input type="text" id="searchCancelled" placeholder="بحث..." oninput="renderCancelled()"><button class="btn btn-green" onclick="exportCancelledToExcel()">تصدير Excel</button></div>
       <div class="blist" id="cancelledList"></div>
     </div>
 
-    <!-- العملاء -->
     <div id="tab-clients" style="display:none">
       <div class="card"><div class="card-title">بحث عن عميل</div><input type="text" id="clientSearch" placeholder="بحث..." oninput="renderClients()"><div id="clientsList" style="margin-top:20px"></div></div>
     </div>
 
-    <!-- إضافة حجز -->
     <div id="tab-add" style="display:none">
       <div class="card">
         <div class="card-title">بيانات العميل</div>
@@ -244,13 +234,11 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
       <div class="btn-row"><button class="btn" onclick="clearForm()">مسح</button><button class="btn btn-primary" onclick="saveBooking()">حفظ</button></div>
     </div>
 
-    <!-- التقارير -->
     <div id="tab-reports" style="display:none">
       <div class="card"><div class="card-title">فلترة التقرير</div><div class="form-grid"><div class="fg"><label>من تاريخ</label><input type="date" id="reportStart"></div><div class="fg"><label>إلى تاريخ</label><input type="date" id="reportEnd"></div></div><button class="btn btn-primary" onclick="generateReport()">عرض التقرير</button><button class="btn btn-green" onclick="printReport()">طباعة</button></div>
       <div id="reportPreview" class="card" style="display:none"></div>
     </div>
 
-    <!-- برنامج الرحلات -->
     <div id="tab-trips" style="display:none">
       <div class="card" id="tripsUploadCard" style="display:none">
         <div class="card-title">📤 رفع برنامج رحلة (PDF)</div>
@@ -276,7 +264,6 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
       </div>
     </div>
 
-    <!-- إدارة الموظفين -->
     <div id="tab-users" style="display:none">
       <div class="card"><div class="card-title">إضافة موظف</div><div class="form-grid"><div class="fg"><label>اسم المستخدم</label><input type="text" id="newUsername"></div><div class="fg"><label>كلمة المرور</label><input type="password" id="newPassword"></div><div class="fg"><label>الاسم الظاهر</label><input type="text" id="newFullName"></div></div><button class="btn btn-primary" onclick="addEmployee()">إضافة</button></div>
       <div class="card"><div class="card-title">قائمة الموظفين</div><div id="usersList"></div></div>
@@ -284,18 +271,17 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
   </div>
 </div>
 
-<!-- ====== مودالات التأكيد والإلغاء ====== -->
 <div class="modal-bg" id="confirmModal"><div class="modal"><div class="card-title">تأكيد الحجز</div><div id="confirmInfo"></div><div class="btn-row"><button onclick="closeConfirmModal()">إلغاء</button><button class="btn-green" onclick="confirmBooking()">تأكيد</button></div></div></div>
 <div class="modal-bg" id="cancelModal"><div class="modal"><div class="card-title">إلغاء الحجز</div><div id="cancelInfo"></div><div class="fg"><label>سبب الإلغاء</label><select id="cancelReason"><option>السعر مرتفع</option><option>تاريخ غير مناسب</option><option>العميل طلب الإلغاء</option><option>لم يرد على الاتصال</option></select></div><div class="btn-row"><button onclick="closeCancelModal()">إلغاء</button><button class="btn-red" onclick="confirmCancel()">تأكيد</button></div></div></div>
 
 <script>
 // ================================================================
-// ==================== (1) إعدادات الاتصال ====================
+// ==================== إعدادات الاتصال ====================
 // ================================================================
 const GS_URL = 'https://script.google.com/macros/s/AKfycby-yVeAng9muQDv59TpvFzLNVIop_w8xb_iYLncSRl81-sHxurGF9ZN1w5h5zAJg_2_bw/exec';
 
 // ================================================================
-// ==================== (2) المتغيرات العامة ====================
+// ==================== متغيرات عامة ====================
 // ================================================================
 let users = [];
 let bookings = [];
@@ -305,34 +291,28 @@ let currentUser = null;
 let charts = {};
 let selectedTripFile = null;
 let lastSyncTime = 0;
-let currentActionId = null;
-let syncInterval = null;
-let isSyncing = false;
 
 const availableServices = ["🚗 نقل مطار", "📱 شريحة اتصال", "🗺️ جولة سياحية"];
 
 // ================================================================
-// ==================== (3) دوال مساعدة ====================
+// ==================== دالة التشفير ====================
 // ================================================================
 function hashPassword(password) {
   return CryptoJS.SHA256(password).toString();
 }
 
 // ================================================================
-// ==================== (4) دوال الاتصال بالخادم (GET) ====================
+// ==================== تحميل البيانات ====================
 // ================================================================
-
-// تحميل البيانات
 async function loadAllData() {
   try {
     const res = await fetch(GS_URL + "?action=read");
-    if (!res.ok) throw new Error('فشل الاتصال بالخادم');
     const data = await res.json();
     users = data.users || [];
     bookings = data.bookings || [];
     cancelledBookings = data.cancelled || [];
     tripDocs = data.trips || [];
-    console.log("✅ تم تحميل البيانات:", { users: users.length, bookings: bookings.length, trips: tripDocs.length });
+    console.log("✅ تم تحميل البيانات:", data);
     return true;
   } catch (err) {
     console.error("❌ خطأ في تحميل البيانات:", err);
@@ -340,13 +320,17 @@ async function loadAllData() {
   }
 }
 
-// حفظ البيانات
+// ================================================================
+// ==================== حفظ البيانات ====================
+// ================================================================
 async function saveAllData() {
   try {
     const data = { bookings, cancelled: cancelledBookings, users, trips: tripDocs };
-    const jsonData = JSON.stringify(data);
-    const url = `${GS_URL}?action=write&data=${encodeURIComponent(jsonData)}`;
-    const res = await fetch(url);
+    const res = await fetch(GS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // تم تصحيح نوع الإرسال هنا لتخطي CORS
+      body: JSON.stringify({ action: 'write', data: data })
+    });
     const result = await res.json();
     return result.success === true;
   } catch (err) {
@@ -356,7 +340,7 @@ async function saveAllData() {
 }
 
 // ================================================================
-// ==================== (5) تسجيل الدخول (النصيحة الأساسية) ====================
+// ==================== تسجيل الدخول ====================
 // ================================================================
 async function login() {
   const username = document.getElementById('loginUsername').value.trim();
@@ -370,35 +354,38 @@ async function login() {
   }
 
   try {
-    // ✅ إرسال كلمة المرور نصية (غير مشفرة) لأن الخادم سيتولى التشفير
-    const url = `${GS_URL}?action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
-    const res = await fetch(url);
-    const result = await res.json();
+    // إرسال طلب تسجيل الدخول إلى الخادم مباشرة بشكل آمن ومحمي
+    const res = await fetch(GS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'login', username: username, password: password })
+    });
+   
+    const data = await res.json();
 
-    if (result.success) {
-      currentUser = result.user;
+    if (data.success) {
+      currentUser = data.user;
       localStorage.setItem('current_session', JSON.stringify(currentUser));
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('mainApp').style.display = 'block';
       document.getElementById('currentUserName').textContent = currentUser.fullName || currentUser.username;
       document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('ar-JO');
-      
-      await loadAllData();
       renderAll();
-      startAutoSync(30000);
       errorBox.style.display = 'none';
     } else {
       errorBox.style.display = 'block';
-      errorBox.textContent = '❌ ' + (result.error || 'اسم المستخدم أو كلمة السر غير صحيحة');
+      errorBox.textContent = '❌ ' + (data.error || 'اسم المستخدم أو كلمة السر غير صحيحة');
     }
   } catch (err) {
     errorBox.style.display = 'block';
-    errorBox.textContent = '⚠️ خطأ في الاتصال بالخادم: ' + err.message;
+    errorBox.textContent = '⚠️ خطأ في الاتصال بالخادم';
     console.error(err);
   }
 }
 
-// تسجيل الخروج
+// ================================================================
+// ==================== تسجيل الخروج ====================
+// ================================================================
 function logout() {
   currentUser = null;
   localStorage.removeItem('current_session');
@@ -406,11 +393,10 @@ function logout() {
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('loginUsername').value = '';
   document.getElementById('loginPassword').value = '';
-  stopAutoSync();
 }
 
 // ================================================================
-// ==================== (6) إدارة الموظفين ====================
+// ==================== إدارة الموظفين ====================
 // ================================================================
 function updateEmployeeSelect() {
   const select = document.getElementById('agentName');
@@ -464,7 +450,7 @@ function renderUsersList() {
 }
 
 // ================================================================
-// ==================== (7) الخدمات الإضافية ====================
+// ==================== الخدمات الإضافية ====================
 // ================================================================
 function addService(sData) {
   const container = document.getElementById('servicesContainer');
@@ -504,7 +490,7 @@ function updateTotals() {
 }
 
 // ================================================================
-// ==================== (8) واتساب ====================
+// ==================== دوال واتساب ====================
 // ================================================================
 function sendWhatsApp(phone, name, country) {
   if (!phone) { alert('لا يوجد رقم هاتف'); return; }
@@ -516,7 +502,7 @@ function sendWhatsApp(phone, name, country) {
 }
 
 // ================================================================
-// ==================== (9) عرض البيانات ====================
+// ==================== عرض الحجوزات ====================
 // ================================================================
 function renderBookings() {
   const search = (document.getElementById('searchBooking')?.value || '').toLowerCase();
@@ -528,7 +514,7 @@ function renderBookings() {
     if (agent && b.agentName !== agent) return false;
     return true;
   });
-  
+ 
   const totalRev = bookings.reduce((s, b) => s + (b.totalPrice || 0), 0);
   const totalPaid = bookings.reduce((s, b) => s + (b.paidAmount || 0), 0);
   document.getElementById('bookingsStats').innerHTML = `
@@ -536,9 +522,9 @@ function renderBookings() {
     <div class="stat-card"><div class="value">${Math.round(totalRev).toLocaleString()} JD</div><div class="label">الإيرادات</div></div>
     <div class="stat-card"><div class="value">${Math.round(totalPaid).toLocaleString()} JD</div><div class="label">المدفوع</div></div>
   `;
-  
+ 
   if (filtered.length === 0) { document.getElementById('bookingsList').innerHTML = '<div class="empty">لا توجد حجوزات</div>'; return; }
-  
+ 
   document.getElementById('bookingsList').innerHTML = filtered.map(b => `
     <div class="bcard ${b.isConfirmed ? 'confirmed' : ''}">
       <div class="bhead"><span class="bname">${b.clientName}</span><div class="badges"><span class="badge badge-info">${b.country}</span><span class="badge ${b.isConfirmed ? 'badge-success' : 'badge-warning'}">${b.isConfirmed ? 'مؤكد' : 'قيد الانتظار'}</span></div></div>
@@ -580,22 +566,22 @@ function renderClients() {
 }
 
 // ================================================================
-// ==================== (10) حفظ وتعديل الحجوزات ====================
+// ==================== حفظ الحجز ====================
 // ================================================================
 async function saveBooking() {
   const name = document.getElementById('clientName').value.trim();
   const country = document.getElementById('country').value;
   const agent = document.getElementById('agentName').value;
-  
+ 
   if (!name || !country) { alert('الرجاء إدخال اسم العميل والدولة'); return; }
   if (!agent) { alert('الرجاء اختيار الموظف المسؤول'); return; }
-  
+ 
   const services = getServices();
   const servicesTotal = services.reduce((s, x) => s + x.price, 0);
   const basePrice = parseFloat(document.getElementById('basePrice').value) || 0;
   const totalPrice = basePrice + servicesTotal;
   const paidAmount = parseFloat(document.getElementById('paidAmount').value) || 0;
-  
+ 
   const booking = {
     id: Date.now().toString(),
     clientName: name,
@@ -625,17 +611,17 @@ async function saveBooking() {
     notes: document.getElementById('notes').value,
     createdAt: Date.now()
   };
-  
+ 
   bookings.unshift(booking);
   const saved = await saveAllData();
-  
+ 
   if (saved) {
     clearForm();
     renderAll();
     showTab('bookings');
     alert('✅ تم حفظ الحجز بنجاح');
   } else {
-    alert('❌ فشل في حفظ البيانات');
+    alert('❌ فشل في حفظ البيانات، يرجى المحاولة مرة أخرى');
     bookings.shift();
   }
 }
@@ -683,8 +669,10 @@ function clearForm() {
 }
 
 // ================================================================
-// ==================== (11) تأكيد وإلغاء ====================
+// ==================== تأكيد وإلغاء ====================
 // ================================================================
+let currentActionId = null;
+
 function openConfirmModal(id) {
   currentActionId = id;
   const b = bookings.find(b => b.id === id);
@@ -727,7 +715,7 @@ function closeConfirmModal() { document.getElementById('confirmModal').classList
 function closeCancelModal() { document.getElementById('cancelModal').classList.remove('open'); }
 
 // ================================================================
-// ==================== (12) لوحة التحكم ====================
+// ==================== Dashboard ====================
 // ================================================================
 function updateDashboard() {
   const total = bookings.length;
@@ -735,7 +723,7 @@ function updateDashboard() {
   const paid = bookings.reduce((s, b) => s + (b.paidAmount || 0), 0);
   const cancelled = cancelledBookings.length;
   const confirmed = bookings.filter(b => b.isConfirmed).length;
-  
+ 
   document.getElementById('dashboardStats').innerHTML = `
     <div class="stat-card"><div class="value">${total}</div><div class="label">إجمالي الحجوزات</div></div>
     <div class="stat-card"><div class="value">${Math.round(revenue).toLocaleString()} JD</div><div class="label">الإيرادات</div></div>
@@ -743,7 +731,7 @@ function updateDashboard() {
     <div class="stat-card"><div class="value">${confirmed}</div><div class="label">مؤكدة</div></div>
     <div class="stat-card"><div class="value">${cancelled}</div><div class="label">ملغية</div></div>
   `;
-  
+ 
   const monthly = {};
   bookings.forEach(b => {
     const d = new Date(b.createdAt);
@@ -756,14 +744,14 @@ function updateDashboard() {
   charts.revenueChart = new Chart(document.getElementById('revenueChart'), {
     type: 'line', data: { labels: months, datasets: [{ label: 'الإيرادات (JD)', data: revData, borderColor: '#059669', fill: true }] }
   });
-  
+ 
   const dest = {};
   bookings.forEach(b => { dest[b.country] = (dest[b.country] || 0) + 1; });
   if (charts.destinationsChart) charts.destinationsChart.destroy();
   charts.destinationsChart = new Chart(document.getElementById('destinationsChart'), {
     type: 'pie', data: { labels: Object.keys(dest), datasets: [{ data: Object.values(dest), backgroundColor: ['#059669', '#3b82f6', '#f59e0b', '#dc2626'] }] }
   });
-  
+ 
   const agents = {};
   bookings.forEach(b => {
     if (b.agentName) {
@@ -775,7 +763,7 @@ function updateDashboard() {
   charts.agentsChart = new Chart(document.getElementById('agentsChart'), {
     type: 'bar', data: { labels: Object.keys(agents), datasets: [{ label: 'المبيعات (JD)', data: Object.values(agents), backgroundColor: '#3b82f6' }] }
   });
-  
+ 
   if (charts.conversionChart) charts.conversionChart.destroy();
   charts.conversionChart = new Chart(document.getElementById('conversionChart'), {
     type: 'doughnut', data: { labels: ['ناجحة', 'ملغية'], datasets: [{ data: [bookings.length, cancelledBookings.length], backgroundColor: ['#059669', '#dc2626'] }] }
@@ -783,7 +771,7 @@ function updateDashboard() {
 }
 
 // ================================================================
-// ==================== (13) التقارير والتصدير ====================
+// ==================== التقارير والتصدير ====================
 // ================================================================
 function generateReport() {
   const start = document.getElementById('reportStart').value;
@@ -793,8 +781,8 @@ function generateReport() {
   if (end) filtered = filtered.filter(b => b.departureDate <= end);
   const totalRev = filtered.reduce((s, b) => s + (b.totalPrice || 0), 0);
   let html = `<div style="text-align:center"><h3>التقرير المالي</h3><p>الفترة: ${start || 'بداية'} - ${end || 'الحالي'}</p><p>تاريخ: ${new Date().toLocaleDateString('ar-JO')}</p></div>
-    <table style="width:100%;border-collapse:collapse;margin-top:15px"><tr style="background:#f1f5f9"><th style="padding:10px">العميل</th><th style="padding:10px">الوجهة</th><th style="padding:10px">التاريخ</th><th style="padding:10px">القيمة</th><th style="padding:10px">الموظف</th></tr>
-    ${filtered.map(b => `<tr><td style="padding:8px">${b.clientName}</td><td style="padding:8px">${b.country}</td><td style="padding:8px">${b.departureDate || '—'}</td><td style="padding:8px">${Math.round(b.totalPrice).toLocaleString()} JD</td><td style="padding:8px">${getEmployeeName(b.agentName)}</td></tr>`).join('')}
+    <table style="width:100%;border-collapse:collapse;margin-top:15px"><tr style="background:#f1f5f9"><th style="padding:10px">العميل</th><th style="padding:10px">الوجهة</th><th style="padding:10px">التاريخ</th><th style="padding:10px">القيمة</th><th style="padding:10px">الموظف</th></td>
+    ${filtered.map(b => `<tr><td style="padding:8px">${b.clientName}</td><td style="padding:8px">${b.country}</td><td style="padding:8px">${b.departureDate || '—'}<tr><td style="padding:8px">${Math.round(b.totalPrice).toLocaleString()} JD</td><td style="padding:8px">${getEmployeeName(b.agentName)}</td></tr>`).join('')}
     </table><div style="margin-top:15px;padding:10px;background:#f1f5f9"><strong>الإجمالي: ${Math.round(totalRev).toLocaleString()} JD</strong></div>`;
   document.getElementById('reportPreview').style.display = 'block';
   document.getElementById('reportPreview').innerHTML = html;
@@ -859,7 +847,7 @@ function importJSON(input) {
 }
 
 // ================================================================
-// ==================== (14) دوال عامة ====================
+// ==================== دوال عامة ====================
 // ================================================================
 function renderAll() {
   renderBookings();
@@ -878,7 +866,11 @@ function showTab(tab) {
     if (el) el.style.display = t === tab ? '' : 'none';
   });
   document.querySelectorAll('.tab').forEach((el, i) => el.classList.toggle('active', tabs[i] === tab));
-  
+ 
+  if (tab === 'bookings' || tab === 'cancelled' || tab === 'clients' || tab === 'dashboard' || tab === 'users') {
+    syncWithSheet();
+  }
+ 
   if (tab === 'dashboard') updateDashboard();
   if (tab === 'bookings') renderBookings();
   if (tab === 'cancelled') renderCancelled();
@@ -888,17 +880,33 @@ function showTab(tab) {
 }
 
 // ================================================================
-// ==================== (15) نظام المزامنة ====================
+// ==================== نظام المزامنة الذكية ====================
 // ================================================================
+
+let syncInterval = null;
+let isSyncing = false;
+
 function updateSyncStatus(status) {
   const dot = document.getElementById('syncDot');
   const text = document.getElementById('syncText');
   if (!dot || !text) return;
+ 
   switch(status) {
-    case 'ok': dot.className = 'sync-dot ok'; text.textContent = 'محدث'; break;
-    case 'syncing': dot.className = 'sync-dot syncing'; text.textContent = 'جاري المزامنة...'; break;
-    case 'error': dot.className = 'sync-dot error'; text.textContent = 'خطأ في المزامنة'; break;
-    default: dot.className = 'sync-dot'; text.textContent = 'غير معروف';
+    case 'ok':
+      dot.className = 'sync-dot ok';
+      text.textContent = 'محدث';
+      break;
+    case 'syncing':
+      dot.className = 'sync-dot syncing';
+      text.textContent = 'جاري المزامنة...';
+      break;
+    case 'error':
+      dot.className = 'sync-dot error';
+      text.textContent = 'خطأ في المزامنة';
+      break;
+    default:
+      dot.className = 'sync-dot';
+      text.textContent = 'غير معروف';
   }
 }
 
@@ -906,10 +914,29 @@ async function syncWithSheet() {
   if (isSyncing) return;
   isSyncing = true;
   updateSyncStatus('syncing');
+ 
   try {
-    await loadAllData();
-    renderAll();
-    updateSyncStatus('ok');
+    const res = await fetch(GS_URL + '?action=sync&lastSync=' + lastSyncTime);
+    const data = await res.json();
+   
+    if (data.success) {
+      if (data.changes) {
+        if (data.changes.updated && data.changes.updated.length > 0) {
+          data.changes.updated.forEach(function(item) {
+            const idx = bookings.findIndex(b => b.id === item.id);
+            if (idx !== -1) bookings[idx] = item;
+            else bookings.push(item);
+          });
+        }
+      }
+     
+      lastSyncTime = data.lastSyncTime;
+      localStorage.setItem('lastSyncTime', lastSyncTime);
+     
+      await loadAllData();
+      renderAll();
+      updateSyncStatus('ok');
+    }
   } catch (err) {
     console.error('❌ فشل المزامنة:', err);
     updateSyncStatus('error');
@@ -933,8 +960,9 @@ function stopAutoSync() {
 }
 
 // ================================================================
-// ==================== (16) برنامج الرحلات ====================
+// ==================== برنامج الرحلات ====================
 // ================================================================
+
 function renderTripDocs() {
   const grid = document.getElementById('tripsGrid');
   const uploadCard = document.getElementById('tripsUploadCard');
@@ -945,8 +973,8 @@ function renderTripDocs() {
     grid.innerHTML = '<div class="empty"><i class="ti ti-files" style="font-size:40px;display:block;margin-bottom:10px"></i>لا توجد برامج رحلات بعد</div>';
     return;
   }
-  
-  grid.innerHTML = tripDocs.map(doc => `
+ 
+  grid.innerHTML = tripDocs.map((doc, idx) => `
     <div class="trip-card">
       <div>
         <div class="trip-card-title">📄 ${doc.title}</div>
@@ -962,6 +990,7 @@ function renderTripDocs() {
 async function deleteTripDoc(fileId) {
   if (currentUser?.role !== 'admin') return;
   if (!confirm('هل تريد حذف هذا البرنامج؟')) return;
+ 
   try {
     const res = await fetch(GS_URL + `?action=deleteFile&fileId=${fileId}`);
     const result = await res.json();
@@ -1002,9 +1031,21 @@ async function uploadTripDoc() {
     document.getElementById('uploadBar').style.width = '70%';
     document.getElementById('uploadMsg').textContent = 'جاري الرفع...';
 
+    const formData = new URLSearchParams();
+    formData.append('action', 'uploadFile');
+    formData.append('fileName', selectedTripFile.name);
+    formData.append('mimeType', selectedTripFile.type);
+    formData.append('fileData', base64);
+    formData.append('title', title);
+    formData.append('desc', desc);
+    formData.append('uploadedBy', currentUser?.fullName || 'المدير');
+
     try {
-      const url = `${GS_URL}?action=uploadFile&fileName=${encodeURIComponent(selectedTripFile.name)}&mimeType=${encodeURIComponent(selectedTripFile.type)}&fileData=${encodeURIComponent(base64)}&title=${encodeURIComponent(title)}&desc=${encodeURIComponent(desc)}&uploadedBy=${encodeURIComponent(currentUser?.fullName || 'المدير')}`;
-      const res = await fetch(url);
+      const res = await fetch(GS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData
+      });
       const result = await res.json();
 
       if (result.success) {
@@ -1034,41 +1075,29 @@ async function uploadTripDoc() {
 }
 
 // ================================================================
-// ==================== (17) بدء التشغيل ====================
+// ==================== بدء التشغيل ====================
 // ================================================================
 (async function init() {
   const savedSyncTime = localStorage.getItem('lastSyncTime');
   if (savedSyncTime) lastSyncTime = parseInt(savedSyncTime);
-  
+ 
   await loadAllData();
-  
   const session = localStorage.getItem('current_session');
   if (session) {
-    try {
-      const s = JSON.parse(session);
-      // التحقق من الجلسة (نرسل كلمة مرور فارغة، الخادم سيرفضها لكننا نتحقق من وجود المستخدم)
-      const url = `${GS_URL}?action=login&username=${encodeURIComponent(s.username)}&password=`;
-      const res = await fetch(url);
-      const result = await res.json();
-      
-      if (result.success) {
-        currentUser = result.user;
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        document.getElementById('currentUserName').textContent = currentUser.fullName || currentUser.username;
-        document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('ar-JO');
-        renderAll();
-        startAutoSync(30000);
-        return;
-      }
-    } catch (err) {
-      console.warn('انتهت صلاحية الجلسة:', err);
+    const s = JSON.parse(session);
+    const u = users.find(u => u.username === s.username);
+    if (u) {
+      currentUser = u;
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'block';
+      document.getElementById('currentUserName').textContent = u.fullName || u.username;
+      document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('ar-JO');
+      renderAll();
+      startAutoSync(30000);
+    } else {
+      localStorage.removeItem('current_session');
     }
-    localStorage.removeItem('current_session');
   }
-  
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('mainApp').style.display = 'none';
 })();
 </script>
 </body>
