@@ -673,7 +673,25 @@ function clearForm() {
 }
 
 // ================================================================
-// ==================== تأكيد وإلغاء ====================
+// ==================== إضافة حجز جديد (إلحاق) ====================
+// ================================================================
+async function addBookingToSheet(bookingData) {
+  try {
+    const res = await fetch(GS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'addBooking', booking: bookingData })
+    });
+    const result = await res.json();
+    return result;
+  } catch (err) {
+    console.error("❌ خطأ في إضافة الحجز:", err);
+    return { success: false, error: err.message };
+  }
+} // <-- القوس المفقود تم إضافته
+
+// ================================================================
+// ==================== تأكيد وإلغاء ==============================
 // ================================================================
 let currentActionId = null;
 
@@ -681,7 +699,10 @@ function openConfirmModal(id) {
   currentActionId = id;
   const b = bookings.find(b => b.id === id);
   if (!b) return;
-  document.getElementById('confirmInfo').innerHTML = `<p><strong>${b.clientName}</strong></p><p>💰 ${b.totalPrice} JD | 💵 المدفوع: ${b.paidAmount} JD</p>`;
+  document.getElementById('confirmInfo').innerHTML = `
+    <p><strong>${b.clientName}</strong></p>
+    <p>💰 ${b.totalPrice} JD | 💵 المدفوع: ${b.paidAmount} JD</p>
+  `;
   document.getElementById('confirmModal').classList.add('open');
 }
 
@@ -695,7 +716,6 @@ async function confirmBooking() {
     });
     const result = await res.json();
     if (result.success) {
-      // تحديث الحجز محلياً
       const b = bookings.find(b => b.id === currentActionId);
       if (b) b.isConfirmed = true;
       closeConfirmModal();
@@ -707,13 +727,17 @@ async function confirmBooking() {
   } catch (err) {
     alert('خطأ في الاتصال');
   }
+}
 
 function openCancelModal(id) {
   currentActionId = id;
   const b = bookings.find(b => b.id === id);
   if (!b) return;
-  document.getElementById('cancelInfo').innerHTML = `<p><strong>${b.clientName}</strong></p><p>💰 ${b.totalPrice} J/p>`;
-  document.getElementById('cancelModal').classList.add('open');D<
+  document.getElementById('cancelInfo').innerHTML = `
+    <p><strong>${b.clientName}</strong></p>
+    <p>💰 ${b.totalPrice} JD</p>
+  `;
+  document.getElementById('cancelModal').classList.add('open');
 }
 
 async function confirmCancel() {
@@ -727,7 +751,6 @@ async function confirmCancel() {
     });
     const result = await res.json();
     if (result.success) {
-      // تحديث محلي: نقل الحجز إلى الملغاة
       const b = bookings.find(b => b.id === currentActionId);
       if (b) {
         cancelledBookings.push({ ...b, reason: reason, cancelledAt: Date.now() });
@@ -744,8 +767,13 @@ async function confirmCancel() {
   }
 }
 
-function closeConfirmModal() { document.getElementById('confirmModal').classList.remove('open'); }
-function closeCancelModal() { document.getElementById('cancelModal').classList.remove('open'); }
+function closeConfirmModal() {
+  document.getElementById('confirmModal').classList.remove('open');
+}
+
+function closeCancelModal() {
+  document.getElementById('cancelModal').classList.remove('open');
+}
 
 // ================================================================
 // ==================== Dashboard ====================
