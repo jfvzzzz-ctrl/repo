@@ -1697,15 +1697,17 @@ function closeCancelModal() {
 }
 
 // ================================================================
-// ==================== Dashboard ====================
+// ==================== Dashboard (النسخة الكاملة مع الرسوم) ======
 // ================================================================
 function updateDashboard() {
+  // --- حساب الإحصائيات ---
   const total = bookings.length;
   const revenue = bookings.reduce((s, b) => s + (b.totalPrice || 0), 0);
   const paid = bookings.reduce((s, b) => s + (b.paidAmount || 0), 0);
   const cancelled = cancelledBookings.length;
   const confirmed = bookings.filter(b => b.isConfirmed).length;
 
+  // --- عرض البطاقات الأفقية مع أيقونات دائرية ---
   document.getElementById('dashboardStats').innerHTML = `
     <div class="dashboard-stat-card">
       <div class="stat-icon-box">📋</div>
@@ -1744,9 +1746,159 @@ function updateDashboard() {
     </div>
   `;
 
-  // ===== الرسوم البيانية =====
-  // ... (نفس الكود السابق للرسوم البيانية، اختصرته هنا للاختصار)
-  // يمكنك إضافة الرسوم البيانية مرة أخرى إذا أردت، لكنها ليست ضرورية للتشغيل.
+  // ================================================================
+  // 1. الإيرادات الشهرية (مخطط خطي مع تدرج)
+  // ================================================================
+  const monthly = {};
+  bookings.forEach(b => {
+    const d = new Date(b.createdAt);
+    const m = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    monthly[m] = (monthly[m] || 0) + (b.totalPrice || 0);
+  });
+  const months = Object.keys(monthly).sort().slice(-6);
+  const revData = months.map(m => monthly[m]);
+
+  if (charts.revenueChart) charts.revenueChart.destroy();
+  const ctx1 = document.getElementById('revenueChart').getContext('2d');
+  const gradient = ctx1.createLinearGradient(0, 0, 0, 300);
+  gradient.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
+  gradient.addColorStop(1, 'rgba(16, 185, 129, 0.02)');
+  
+  charts.revenueChart = new Chart(ctx1, {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [{
+        label: 'الإيرادات (JD)',
+        data: revData,
+        borderColor: '#10b981',
+        backgroundColor: gradient,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#10b981',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 7,
+        borderWidth: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { labels: { font: { family: 'Cairo', size: 12 }, usePointStyle: true } }
+      },
+      scales: {
+        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  // ================================================================
+  // 2. توزيع الحجوزات حسب الوجهة (مخطط دائري بألوان جذابة)
+  // ================================================================
+  const dest = {};
+  bookings.forEach(b => { dest[b.country] = (dest[b.country] || 0) + 1; });
+  const destLabels = Object.keys(dest);
+  const colorPalette = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#14b8a6', '#f97316', '#6366f1', '#84cc16'];
+  const destColors = destLabels.map((_, i) => colorPalette[i % colorPalette.length]);
+
+  if (charts.destinationsChart) charts.destinationsChart.destroy();
+  charts.destinationsChart = new Chart(document.getElementById('destinationsChart'), {
+    type: 'pie',
+    data: {
+      labels: destLabels,
+      datasets: [{
+        data: Object.values(dest),
+        backgroundColor: destColors,
+        borderColor: '#fff',
+        borderWidth: 2,
+        borderRadius: 6,
+        spacing: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { 
+          position: 'bottom', 
+          labels: { font: { family: 'Cairo', size: 11 }, usePointStyle: true, padding: 15 } 
+        }
+      }
+    }
+  });
+
+  // ================================================================
+  // 3. أداء الموظفين (مخطط أعمدة بتدرج)
+  // ================================================================
+  const agents = {};
+  bookings.forEach(b => {
+    if (b.agentName) {
+      const name = getEmployeeName(b.agentName);
+      agents[name] = (agents[name] || 0) + (b.totalPrice || 0);
+    }
+  });
+  if (charts.agentsChart) charts.agentsChart.destroy();
+  const ctx3 = document.getElementById('agentsChart').getContext('2d');
+  const gradientBar = ctx3.createLinearGradient(0, 0, 0, 300);
+  gradientBar.addColorStop(0, '#6366f1');
+  gradientBar.addColorStop(1, '#4f46e5');
+
+  charts.agentsChart = new Chart(ctx3, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(agents),
+      datasets: [{
+        label: 'المبيعات (JD)',
+        data: Object.values(agents),
+        backgroundColor: gradientBar,
+        borderRadius: 8,
+        barPercentage: 0.6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { font: { family: 'Cairo', size: 12 }, usePointStyle: true } }
+      },
+      scales: {
+        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  // ================================================================
+  // 4. نسبة النجاح (مخطط دونات محسن)
+  // ================================================================
+  if (charts.conversionChart) charts.conversionChart.destroy();
+  charts.conversionChart = new Chart(document.getElementById('conversionChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['ناجحة', 'ملغية'],
+      datasets: [{
+        data: [bookings.length, cancelledBookings.length],
+        backgroundColor: ['#22c55e', '#ef4444'],
+        borderColor: '#fff',
+        borderWidth: 3,
+        borderRadius: 10,
+        spacing: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      cutout: '72%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { font: { family: 'Cairo', size: 13, weight: '600' }, usePointStyle: true, padding: 20 }
+        }
+      }
+    }
+  });
 }
 
 // ================================================================
