@@ -305,11 +305,15 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
     </div>
 
     <div id="tab-cancelled" style="display:none">
-      <div class="stats-grid" id="cancelledStats"></div>
-      <div class="filter-row"><input type="text" id="searchCancelled" placeholder="بحث..." oninput="resetCancelledPage()"><button class="btn btn-green" onclick="exportCancelledToExcel()">تصدير Excel</button></div>
-      <div class="blist" id="cancelledList"></div>
-      <div class="pagination" id="cancelledPagination"></div>
-    </div>
+  <div class="stats-grid" id="cancelledStats"></div>
+  <div class="filter-row">
+    <input type="text" id="searchCancelled" placeholder="بحث..." oninput="resetCancelledPage()">
+    <button class="btn btn-primary" onclick="printCancelledReport()">🖨️ طباعة</button>
+    <button class="btn btn-green" onclick="exportCancelledToExcel()">📊 تصدير Excel</button>
+  </div>
+  <div class="blist" id="cancelledList"></div>
+  <div class="pagination" id="cancelledPagination"></div>
+</div>
 
     <div id="tab-clients" style="display:none">
       <div class="card"><div class="card-title">بحث عن عميل</div><input type="text" id="clientSearch" placeholder="بحث..." oninput="renderClients()"><div id="clientsList" style="margin-top:20px"></div></div>
@@ -801,13 +805,21 @@ function goToBookingsPage(page) {
 }
 
 // ================================================================
-// ==================== عرض الملغيات (مع Pagination) ==============
+// ==================== عرض الملغيات (نسخة محسنة) ================
 // ================================================================
 function renderCancelled() {
   const search = (document.getElementById('searchCancelled')?.value || '').toLowerCase();
   let filtered = cancelledBookings.filter(c => !search || c.clientName.toLowerCase().includes(search));
-  document.getElementById('cancelledStats').innerHTML = `<div class="stat-card"><div class="value">${cancelledBookings.length}</div><div class="label">حجوزات ملغية</div></div>`;
   
+  // إحصائيات
+  const totalCancelled = cancelledBookings.length;
+  const totalCancelledValue = cancelledBookings.reduce((sum, c) => sum + (c.totalPrice || 0), 0);
+  document.getElementById('cancelledStats').innerHTML = `
+    <div class="stat-card"><div class="value">${totalCancelled}</div><div class="label">إجمالي الملغيات</div></div>
+    <div class="stat-card"><div class="value">${Math.round(totalCancelledValue).toLocaleString()} JD</div><div class="label">إجمالي المبالغ الملغية</div></div>
+  `;
+  
+  // Pagination
   const totalPages = Math.ceil(filtered.length / pageSize) || 1;
   if (cancelledPage > totalPages) cancelledPage = totalPages;
   const start = (cancelledPage - 1) * pageSize;
@@ -819,20 +831,43 @@ function renderCancelled() {
     document.getElementById('cancelledPagination').innerHTML = '';
     return; 
   }
-  document.getElementById('cancelledList').innerHTML = pageItems.map(c => `
-    <div class="bcard cancelled"><div class="bhead"><span class="bname">${c.clientName}</span><div class="badges"><span class="badge badge-danger">ملغي</span></div></div>
-    <div class="bmeta"><span class="mi">📅 ${c.departureDate || '—'}</span><span class="mi">💰 ${(c.totalPrice || 0).toLocaleString()} JD</span><span class="mi">📝 السبب: ${c.reason || 'غير محدد'}</span></div>
+  
+  // عرض البطاقات بشكل منظم ودقيق
+  document.getElementById('cancelledList').innerHTML = pageItems.map(c => {
+    // تنسيق تاريخ الإلغاء
+    let cancelDate = '—';
+    if (c.cancelledAt) {
+      try {
+        cancelDate = new Date(c.cancelledAt).toLocaleDateString('ar-JO', { 
+          year: 'numeric', month: 'long', day: 'numeric' 
+        });
+      } catch(e) { cancelDate = c.cancelledAt || '—'; }
+    }
+    
+    return `
+    <div class="bcard cancelled" style="border-right: 6px solid #dc2626; background: #fef2f2;">
+      <div class="bhead">
+        <span class="bname" style="font-size:18px;">${c.clientName}</span>
+        <div class="badges">
+          <span class="badge badge-danger">ملغي</span>
+          <span class="badge badge-info">${c.country || 'غير محدد'}</span>
+        </div>
+      </div>
+      
+      <div class="bmeta" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+        <span class="mi"><i class="ti ti-phone"></i> ${c.clientPhone || 'لا يوجد'}</span>
+        <span class="mi"><i class="ti ti-calendar-event"></i> تاريخ السفر: ${c.departureDate || '—'}</span>
+        <span class="mi"><i class="ti ti-calendar-x"></i> تاريخ الإلغاء: ${cancelDate}</span>
+        <span class="mi" style="font-weight:700; color:#dc2626;"><i class="ti ti-moneybag"></i> المبلغ: ${(c.totalPrice || 0).toLocaleString()} JD</span>
+        <span class="mi" style="grid-column: 1 / -1; background:#fee2e2; padding:8px 12px; border-radius:12px; margin-top:4px;">
+          <i class="ti ti-message-circle"></i> سبب الإلغاء: <strong>${c.reason || 'غير محدد'}</strong>
+        </span>
+      </div>
     </div>
-  `).join('');
+  `}).join('');
   
   renderPagination('cancelledPagination', cancelledPage, totalPages, 'goToCancelledPage');
 }
-
-function goToCancelledPage(page) {
-  cancelledPage = page;
-  renderCancelled();
-}
-
 // ================================================================
 // ==================== عرض العملاء ====================
 // ================================================================
@@ -1335,7 +1370,112 @@ function printReport() {
     printWindow.close();
   }, 500);
 }
+// ================================================================
+// ==================== طباعة تقرير الملغيات ====================
+// ================================================================
+function printCancelledReport() {
+  if (cancelledBookings.length === 0) {
+    showToast('لا توجد حجوزات ملغية للطباعة', 'warning');
+    return;
+  }
 
+  // ترتيب الملغيات حسب تاريخ الإلغاء (الأحدث أولاً)
+  const sorted = [...cancelledBookings].sort((a, b) => (b.cancelledAt || 0) - (a.cancelledAt || 0));
+  
+  // حساب الإجماليات
+  const totalCount = sorted.length;
+  const totalValue = sorted.reduce((sum, c) => sum + (c.totalPrice || 0), 0);
+  
+  // بناء محتوى التقرير
+  let rows = '';
+  sorted.forEach(c => {
+    let cancelDate = '—';
+    if (c.cancelledAt) {
+      try { cancelDate = new Date(c.cancelledAt).toLocaleDateString('ar-JO'); } catch(e) { cancelDate = c.cancelledAt || '—'; }
+    }
+    rows += `
+      <tr>
+        <td style="padding:8px; border:1px solid #e2e8f0;">${c.clientName || '—'}</td>
+        <td style="padding:8px; border:1px solid #e2e8f0;">${c.country || '—'}</td>
+        <td style="padding:8px; border:1px solid #e2e8f0;">${c.departureDate || '—'}</td>
+        <td style="padding:8px; border:1px solid #e2e8f0;">${cancelDate}</td>
+        <td style="padding:8px; border:1px solid #e2e8f0;">${(c.totalPrice || 0).toLocaleString()} JD</td>
+        <td style="padding:8px; border:1px solid #e2e8f0;">${c.reason || 'غير محدد'}</td>
+      </tr>
+    `;
+  });
+
+  const reportHTML = `
+    <div style="text-align:center; margin-bottom:25px;">
+      <h2 style="color:#0f172a;">📋 تقرير الحجوزات الملغية</h2>
+      <p style="color:#64748b;">تاريخ التقرير: ${new Date().toLocaleDateString('ar-JO')}</p>
+    </div>
+    <div style="display:flex; gap:20px; justify-content:center; flex-wrap:wrap; margin-bottom:20px;">
+      <div style="background:#f8fafc; padding:10px 25px; border-radius:12px; text-align:center;">
+        <div style="font-size:22px; font-weight:800; color:#0f172a;">${totalCount}</div>
+        <div style="font-size:12px; color:#64748b;">إجمالي الملغيات</div>
+      </div>
+      <div style="background:#f8fafc; padding:10px 25px; border-radius:12px; text-align:center;">
+        <div style="font-size:22px; font-weight:800; color:#dc2626;">${Math.round(totalValue).toLocaleString()} JD</div>
+        <div style="font-size:12px; color:#64748b;">إجمالي المبالغ الملغية</div>
+      </div>
+    </div>
+    <table style="width:100%; border-collapse:collapse; margin-top:10px; direction:rtl; font-size:14px;">
+      <thead>
+        <tr style="background:#f1f5f9;">
+          <th style="padding:10px; border:1px solid #e2e8f0;">العميل</th>
+          <th style="padding:10px; border:1px solid #e2e8f0;">الدولة</th>
+          <th style="padding:10px; border:1px solid #e2e8f0;">تاريخ السفر</th>
+          <th style="padding:10px; border:1px solid #e2e8f0;">تاريخ الإلغاء</th>
+          <th style="padding:10px; border:1px solid #e2e8f0;">القيمة</th>
+          <th style="padding:10px; border:1px solid #e2e8f0;">سبب الإلغاء</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+      </tbody>
+    </table>
+    <div style="margin-top:20px; padding:10px; background:#f1f5f9; border-radius:12px; text-align:center; font-weight:bold;">
+      الإجمالي الكلي: ${Math.round(totalValue).toLocaleString()} JD
+    </div>
+  `;
+
+  // فتح نافذة الطباعة
+  const printWindow = window.open('', '_blank', 'width=900,height=700');
+  if (!printWindow) {
+    showToast('الرجاء السماح بالنوافذ المنبثقة', 'error');
+    return;
+  }
+  
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>تقرير الحجوزات الملغية</title>
+      <style>
+        body { font-family: 'Cairo', sans-serif; direction: rtl; padding: 30px; background: #fff; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #e2e8f0; padding: 8px; text-align: center; }
+        th { background: #f1f5f9; }
+        @media print {
+          body { padding: 20px; }
+          .no-print { display: none; }
+        }
+      </style>
+    </head>
+    <body>
+      ${reportHTML}
+    </body>
+    </html>
+  `);
+  
+  printWindow.document.close();
+  setTimeout(() => {
+    printWindow.print();
+    printWindow.close();
+  }, 500);
+}
 function exportToExcel() {
   if (!bookings.length) { showToast('لا توجد بيانات للتصدير', 'warning'); return; }
   const ws = XLSX.utils.json_to_sheet(bookings.map(b => ({
