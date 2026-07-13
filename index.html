@@ -93,27 +93,49 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
 }
 .login-box {
-  background: rgba(25, 34, 56, 0.75); /* تحويلها لداكن متناسق مع الخلفية */
-  backdrop-filter: blur(10px);
+  background: rgba(15, 23, 42, 0.9) !important; /* لون داكن احترافي */
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border-radius: 24px;
-  padding: 40px;
-  width: 90%;
-  max-width: 420px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  color: #fff !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+ 
+  /* --- كود التوسيط والإصلاح الشامل --- */
+  position: fixed;        /* يضمن بقاء الشاشة فوق جميع العناصر */
+  top: 50%;               /* النزول لمنتصف الشاشة عمودياً */
+  left: 50%;              /* التحرك لمنتصف الشاشة أفقياً */
+  transform: translate(-50%, -50%); /* وزن الأبعاد ليكون التوسيط حقيقياً 100% */
+ 
+  /* --- التحكم في الحجم المفقود --- */
+  width: 90%;             /* متجاوب مع شاشات الهواتف */
+  max-width: 420px;       /* الحد الأقصى لعرض الصندوق على شاشات الكمبيوتر */
+  padding: 40px;          /* المساحة الداخلية للعناصر */
+  border-radius: 24px;    /* انحناء الحواف الاحترافي */
+  z-index: 9999;          /* ظهور الشاشة فوق أي عناصر أخرى */
 }
+
+/* إصلاح نصوص العناوين داخل الصندوق */
 .login-box h2 {
-  color: #fff;
+  color: #fff !important;
+  margin-bottom: 25px;
+  text-align: center;
 }
+
+/* إصلاح حقول الإدخال لتأخذ العرض الكامل للصندوق */
 .login-box input {
+  width: 100%;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.1);
   color: #fff;
+  padding: 12px 15px;
+  margin-bottom: 15px;
+  border-radius: 12px;
+  font-family: 'Cairo', sans-serif;
 }
+
 .login-box input:focus {
   border-color: #38bdf8;
   background: rgba(255, 255, 255, 0.1);
+  outline: none;
 }
 .user-card{background:#f8fafc;border-radius:16px;padding:15px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
 .trips-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px;margin-top:10px}
