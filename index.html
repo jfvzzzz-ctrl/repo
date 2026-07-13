@@ -145,6 +145,148 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
 .trip-pdf-btn{background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;border:none;border-radius:30px;padding:8px 18px;cursor:pointer;font-size:13px;font-family:inherit;display:flex;align-items:center;gap:6px;justify-content:center}
 .upload-zone{border:2px dashed #cbd5e1;border-radius:20px;padding:30px;text-align:center;color:#94a3b8;cursor:pointer;transition:border-color .2s}
 .upload-zone:hover{border-color:#38bdf8;color:#38bdf8}
+  /* جعل الجداول والعناصر تتكيف مع الموبايل */
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr !important; /* عمود واحد في الموبايل */
+    gap: 12px;
+  }
+  
+  .fg.full {
+    grid-column: 1 !important;
+  }
+  
+  .tabs {
+    gap: 6px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 5px;
+  }
+  
+  .tab {
+    padding: 8px 14px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 12px 15px;
+  }
+  
+  .topbar-title {
+    font-size: 16px;
+    justify-content: center;
+  }
+  
+  .topbar > div:last-child {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  
+  .bmeta {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .bhead {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .bactions {
+    flex-wrap: wrap;
+  }
+  
+  .modal {
+    width: 95%;
+    padding: 20px;
+    margin: 10px;
+  }
+  
+  .filter-row {
+    flex-direction: column;
+  }
+  
+  .filter-row input,
+  .filter-row select {
+    min-width: 100%;
+  }
+  
+  .service-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .service-item select,
+  .service-item input {
+    width: 100% !important;
+  }
+  
+  .chart-row {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .trips-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .login-box {
+    padding: 25px;
+    width: 95%;
+  }
+  
+  .backup-actions {
+    justify-content: center;
+  }
+  
+  .btn-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .btn-row .btn {
+    justify-content: center;
+  }
+  
+  .user-card {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 8px;
+  }
+}
+
+/* تحسينات إضافية للشاشات الصغيرة جداً */
+@media (max-width: 480px) {
+  .stat-card .value {
+    font-size: 20px;
+  }
+  
+  .bname {
+    font-size: 15px;
+  }
+  
+  .card {
+    padding: 15px;
+  }
+  
+  .topbar-badge {
+    font-size: 9px;
+    padding: 1px 6px;
+  }
+}
 </style>
 </head>
 <body>
@@ -239,7 +381,7 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
           <div class="fg"><label>البريد الإلكتروني</label><input type="email" id="clientEmail"></div>
           <div class="fg"><label>عدد المسافرين</label><input type="number" id="travelers" value="2"></div>
           <div class="fg"><label>الموظف المسؤول</label><select id="agentName"></select></div>
-          <div class="fg"><label>مصدر الحجز</label><select id="bookingSource"><option>واتساب</option><option>إنستغرام</option><option>هاتف</option></select></div>
+          <div class="fg"><label>مصدر الحجز</label><select id="bookingSource"><option>واتساب</option><option>إنستغرام</option><option>هاتف</option><option>فيسبوك</option><option>غير ذلك</option></select></div>
         </div>
       </div>
       <div class="card">
