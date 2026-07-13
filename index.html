@@ -143,57 +143,72 @@ body {
 }
 
 /* ================================================================
-   البطاقات الإحصائية (Dashboard)
+   بطاقات لوحة التحكم - تصميم أفقي مع أيقونات دائرية (نسخة نهائية)
    ================================================================ */
 .dashboard-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
   margin-bottom: 30px;
+}
+@media (max-width: 992px) {
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
 }
 .dashboard-stat-card {
   background: #fff;
-  border-radius: 20px;
-  padding: 20px 18px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-  text-align: center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  border-bottom: 4px solid #e2e8f0;
-  position: relative;
-  overflow: hidden;
+  border-radius: 18px;
+  padding: 16px 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(226, 232, 240, 0.6);
 }
 .dashboard-stat-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.10);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  border-color: transparent;
 }
-.dashboard-stat-card .stat-icon {
-  font-size: 28px;
-  margin-bottom: 8px;
-  display: block;
+.dashboard-stat-card .stat-icon-box {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+.dashboard-stat-card .stat-content {
+  flex: 1;
+  min-width: 0;
 }
 .dashboard-stat-card .stat-value {
-  font-size: 28px;
+  font-size: 20px;
   font-weight: 800;
   color: #0f172a;
   line-height: 1.2;
 }
 .dashboard-stat-card .stat-label {
-  font-size: 13px;
+  font-size: 12px;
   color: #64748b;
-  margin-top: 6px;
   font-weight: 500;
+  white-space: nowrap;
 }
-/* ألوان جانبية مميزة لكل بطاقة */
-.dashboard-stat-card:nth-child(1) { border-bottom-color: #3b82f6; }
-.dashboard-stat-card:nth-child(1) .stat-icon { color: #3b82f6; }
-.dashboard-stat-card:nth-child(2) { border-bottom-color: #10b981; }
-.dashboard-stat-card:nth-child(2) .stat-icon { color: #10b981; }
-.dashboard-stat-card:nth-child(3) { border-bottom-color: #f59e0b; }
-.dashboard-stat-card:nth-child(3) .stat-icon { color: #f59e0b; }
-.dashboard-stat-card:nth-child(4) { border-bottom-color: #8b5cf6; }
-.dashboard-stat-card:nth-child(4) .stat-icon { color: #8b5cf6; }
-.dashboard-stat-card:nth-child(5) { border-bottom-color: #ef4444; }
-.dashboard-stat-card:nth-child(5) .stat-icon { color: #ef4444; }
+.dashboard-stat-card .stat-label .highlight {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+/* ألوان الخلفيات للأيقونات */
+.dashboard-stat-card:nth-child(1) .stat-icon-box { background: #eff6ff; color: #3b82f6; }
+.dashboard-stat-card:nth-child(2) .stat-icon-box { background: #ecfdf5; color: #10b981; }
+.dashboard-stat-card:nth-child(3) .stat-icon-box { background: #fef3c7; color: #f59e0b; }
+.dashboard-stat-card:nth-child(4) .stat-icon-box { background: #f5f3ff; color: #8b5cf6; }
+.dashboard-stat-card:nth-child(5) .stat-icon-box { background: #fef2f2; color: #ef4444; }
 
 /* ================================================================
    البطاقات العامة (Cards)
@@ -793,13 +808,13 @@ input:focus, select:focus, textarea:focus {
   .btn-row { flex-direction: column; align-items: stretch; }
   .btn-row .btn { justify-content: center; }
   .user-card { flex-direction: column; align-items: stretch; text-align: center; gap: 8px; }
-  .dashboard-stat-card .stat-value { font-size: 22px; }
+  .dashboard-stat-card .stat-value { font-size: 18px; }
   .bname { font-size: 15px; }
   .card { padding: 15px; }
   .topbar-badge { font-size: 9px; padding: 1px 6px; }
 }
 @media (max-width: 480px) {
-  .dashboard-stat-card .stat-value { font-size: 20px; }
+  .dashboard-stat-card .stat-value { font-size: 16px; }
   .bname { font-size: 14px; }
   .card { padding: 12px; }
   .topbar-title { font-size: 14px; }
@@ -861,7 +876,7 @@ input:focus, select:focus, textarea:focus {
     </div>
 
     <div id="tab-dashboard">
-      <div class="stats-grid" id="dashboardStats"></div>
+      <div class="dashboard-stats-grid" id="dashboardStats"></div>
       <div class="chart-row">
         <div class="chart-card"><div class="chart-title">الإيرادات الشهرية</div><canvas id="revenueChart"></canvas></div>
         <div class="chart-card"><div class="chart-title">توزيع الحجوزات حسب الوجهة</div><canvas id="destinationsChart"></canvas></div>
@@ -890,15 +905,15 @@ input:focus, select:focus, textarea:focus {
     </div>
 
     <div id="tab-cancelled" style="display:none">
-  <div class="stats-grid" id="cancelledStats"></div>
-  <div class="filter-row">
-    <input type="text" id="searchCancelled" placeholder="بحث..." oninput="resetCancelledPage()">
-    <button class="btn btn-primary" onclick="printCancelledReport()">🖨️ طباعة</button>
-    <button class="btn btn-green" onclick="exportCancelledToExcel()">📊 تصدير Excel</button>
-  </div>
-  <div class="blist" id="cancelledList"></div>
-  <div class="pagination" id="cancelledPagination"></div>
-</div>
+      <div class="stats-grid" id="cancelledStats"></div>
+      <div class="filter-row">
+        <input type="text" id="searchCancelled" placeholder="بحث..." oninput="resetCancelledPage()">
+        <button class="btn btn-primary" onclick="printCancelledReport()">🖨️ طباعة</button>
+        <button class="btn btn-green" onclick="exportCancelledToExcel()">📊 تصدير Excel</button>
+      </div>
+      <div class="blist" id="cancelledList"></div>
+      <div class="pagination" id="cancelledPagination"></div>
+    </div>
 
     <div id="tab-clients" style="display:none">
       <div class="card"><div class="card-title">بحث عن عميل</div><input type="text" id="clientSearch" placeholder="بحث..." oninput="renderClients()"><div id="clientsList" style="margin-top:20px"></div></div>
@@ -1379,7 +1394,7 @@ function renderBookings() {
         ${b.clientPhone ? `<button class="bsm btn-wa" onclick="sendWhatsApp('${b.clientPhone}','${b.clientName}','${b.country}')">واتساب</button>` : ''}
       </div>
     </div>
-  `}).join('');
+  `).join('');
 
   renderPagination('bookingsPagination', bookingsPage, totalPages, 'goToBookingsPage');
 }
@@ -1453,6 +1468,12 @@ function renderCancelled() {
   
   renderPagination('cancelledPagination', cancelledPage, totalPages, 'goToCancelledPage');
 }
+
+function goToCancelledPage(page) {
+  cancelledPage = page;
+  renderCancelled();
+}
+
 // ================================================================
 // ==================== عرض العملاء ====================
 // ================================================================
@@ -1695,33 +1716,43 @@ function updateDashboard() {
   const paid = bookings.reduce((s, b) => s + (b.paidAmount || 0), 0);
   const cancelled = cancelledBookings.length;
   const confirmed = bookings.filter(b => b.isConfirmed).length;
-  
-  // إضافة أيقونات إلى البطاقات
+
+  // --- عرض البطاقات الأفقية مع أيقونات دائرية ---
   document.getElementById('dashboardStats').innerHTML = `
     <div class="dashboard-stat-card">
-      <span class="stat-icon">📋</span>
-      <div class="stat-value">${total}</div>
-      <div class="stat-label">إجمالي الحجوزات</div>
+      <div class="stat-icon-box">📋</div>
+      <div class="stat-content">
+        <div class="stat-value">${total}</div>
+        <div class="stat-label">إجمالي الحجوزات</div>
+      </div>
     </div>
     <div class="dashboard-stat-card">
-      <span class="stat-icon">💰</span>
-      <div class="stat-value">${Math.round(revenue).toLocaleString()} JD</div>
-      <div class="stat-label">الإيرادات</div>
+      <div class="stat-icon-box">💰</div>
+      <div class="stat-content">
+        <div class="stat-value">${Math.round(revenue).toLocaleString()} JD</div>
+        <div class="stat-label">الإيرادات</div>
+      </div>
     </div>
     <div class="dashboard-stat-card">
-      <span class="stat-icon">💳</span>
-      <div class="stat-value">${Math.round(paid).toLocaleString()} JD</div>
-      <div class="stat-label">المدفوع</div>
+      <div class="stat-icon-box">💳</div>
+      <div class="stat-content">
+        <div class="stat-value">${Math.round(paid).toLocaleString()} JD</div>
+        <div class="stat-label">المدفوع من العملاء</div>
+      </div>
     </div>
     <div class="dashboard-stat-card">
-      <span class="stat-icon">✅</span>
-      <div class="stat-value">${confirmed}</div>
-      <div class="stat-label">مؤكدة</div>
+      <div class="stat-icon-box">✅</div>
+      <div class="stat-content">
+        <div class="stat-value">${confirmed}</div>
+        <div class="stat-label">مؤكدة</div>
+      </div>
     </div>
     <div class="dashboard-stat-card">
-      <span class="stat-icon">❌</span>
-      <div class="stat-value">${cancelled}</div>
-      <div class="stat-label">ملغية</div>
+      <div class="stat-icon-box">❌</div>
+      <div class="stat-content">
+        <div class="stat-value">${cancelled}</div>
+        <div class="stat-label">ملغية</div>
+      </div>
     </div>
   `;
 
@@ -1910,21 +1941,18 @@ function generateReport() {
 // ==================== طباعة التقرير (نافذة جديدة) ===============
 // ================================================================
 function printReport() {
-  // الحصول على محتوى التقرير
   const reportContent = document.getElementById('reportPreview').innerHTML;
   if (!reportContent || reportContent.trim() === '') {
     showToast('الرجاء عرض التقرير أولاً', 'warning');
     return;
   }
   
-  // فتح نافذة جديدة
   const printWindow = window.open('', '_blank', 'width=800,height=600');
   if (!printWindow) {
     showToast('الرجاء السماح بالنوافذ المنبثقة', 'error');
     return;
   }
   
-  // كتابة محتوى التقرير فقط في النافذة الجديدة
   printWindow.document.write(`
     <!DOCTYPE html>
     <html>
@@ -1933,30 +1961,22 @@ function printReport() {
       <title>التقرير المالي</title>
       <style>
         body { font-family: 'Cairo', sans-serif; direction: rtl; padding: 30px; background: #fff; }
-       .stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: 16px;
-  margin-bottom: 25px;
-}
-.stat-card {
-  background: #fff;
-  border-radius: 24px;
-  padding: 18px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  text-align: center;
-}
-.stat-card .value {
-  font-size: 28px;
-  font-weight: 800;
-  color: #0f172a;
-}
-.stat-card .label {
-  font-size: 12px;
-  color: #64748b;
-  margin-top: 5px;
-}
+        .stat-card { 
+          display: inline-block; 
+          background: #f8fafc; 
+          border-radius: 12px; 
+          padding: 15px 25px; 
+          margin: 0 10px 15px 10px;
+          text-align: center;
+          min-width: 120px;
         }
+        .stat-card .value { font-size: 24px; font-weight: 800; color: #0f172a; }
+        .stat-card .label { font-size: 12px; color: #64748b; margin-top: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { background: #f1f5f9; padding: 10px; border: 1px solid #e2e8f0; }
+        td { padding: 8px; border: 1px solid #e2e8f0; }
+        .total-row { margin-top: 15px; padding: 10px; background: #f1f5f9; border-radius: 12px; font-weight: bold; }
+        @media print { body { padding: 20px; } }
       </style>
     </head>
     <body>
@@ -1966,13 +1986,12 @@ function printReport() {
   `);
   
   printWindow.document.close();
-  
-  // انتظار تحميل المحتوى ثم الطباعة
   setTimeout(() => {
     printWindow.print();
     printWindow.close();
   }, 500);
 }
+
 // ================================================================
 // ==================== طباعة تقرير الملغيات ====================
 // ================================================================
@@ -1982,14 +2001,10 @@ function printCancelledReport() {
     return;
   }
 
-  // ترتيب الملغيات حسب تاريخ الإلغاء (الأحدث أولاً)
   const sorted = [...cancelledBookings].sort((a, b) => (b.cancelledAt || 0) - (a.cancelledAt || 0));
-  
-  // حساب الإجماليات
   const totalCount = sorted.length;
   const totalValue = sorted.reduce((sum, c) => sum + (c.totalPrice || 0), 0);
   
-  // بناء محتوى التقرير
   let rows = '';
   sorted.forEach(c => {
     let cancelDate = '—';
@@ -2043,7 +2058,6 @@ function printCancelledReport() {
     </div>
   `;
 
-  // فتح نافذة الطباعة
   const printWindow = window.open('', '_blank', 'width=900,height=700');
   if (!printWindow) {
     showToast('الرجاء السماح بالنوافذ المنبثقة', 'error');
@@ -2061,10 +2075,7 @@ function printCancelledReport() {
         table { width: 100%; border-collapse: collapse; }
         th, td { border: 1px solid #e2e8f0; padding: 8px; text-align: center; }
         th { background: #f1f5f9; }
-        @media print {
-          body { padding: 20px; }
-          .no-print { display: none; }
-        }
+        @media print { body { padding: 20px; } }
       </style>
     </head>
     <body>
@@ -2079,6 +2090,7 @@ function printCancelledReport() {
     printWindow.close();
   }, 500);
 }
+
 function exportToExcel() {
   if (!bookings.length) { showToast('لا توجد بيانات للتصدير', 'warning'); return; }
   const ws = XLSX.utils.json_to_sheet(bookings.map(b => ({
