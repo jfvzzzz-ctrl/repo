@@ -1933,24 +1933,29 @@ function printReport() {
       <title>التقرير المالي</title>
       <style>
         body { font-family: 'Cairo', sans-serif; direction: rtl; padding: 30px; background: #fff; }
-        .stat-card { 
-          display: inline-block; 
-          background: #f8fafc; 
-          border-radius: 12px; 
-          padding: 15px 25px; 
-          margin: 0 10px 15px 10px;
-          text-align: center;
-          min-width: 120px;
-        }
-        .stat-card .value { font-size: 24px; font-weight: 800; color: #0f172a; }
-        .stat-card .label { font-size: 12px; color: #64748b; margin-top: 5px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { background: #f1f5f9; padding: 10px; border: 1px solid #e2e8f0; }
-        td { padding: 8px; border: 1px solid #e2e8f0; }
-        .total-row { margin-top: 15px; padding: 10px; background: #f1f5f9; border-radius: 12px; font-weight: bold; }
-        @media print {
-          body { padding: 20px; }
-          .stat-card { background: #f1f5f9; }
+       .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 16px;
+  margin-bottom: 25px;
+}
+.stat-card {
+  background: #fff;
+  border-radius: 24px;
+  padding: 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  text-align: center;
+}
+.stat-card .value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+}
+.stat-card .label {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 5px;
+}
         }
       </style>
     </head>
