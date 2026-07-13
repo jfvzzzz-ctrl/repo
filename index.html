@@ -81,13 +81,45 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center}
 .modal-bg.open{display:flex}
 .modal{background:#fff;border-radius:32px;padding:28px;width:90%;max-width:500px}
-/* Toast Notifications */
-.toast-container{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center;width:90%;max-width:400px;pointer-events:none}
-.toast{background:#1e293b;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,0.3);animation:slideDown 0.3s ease;width:100%;text-align:center;pointer-events:auto;border-right:4px solid #38bdf8}
-.toast.success{border-right-color:#22c55e}
-.toast.error{border-right-color:#ef4444}
-.toast.warning{border-right-color:#f59e0b}
-@keyframes slideDown{from{transform:translateY(-30px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* Toast Notifications - منتصف الشاشة */
+.toast-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  width: 90%;
+  max-width: 420px;
+  pointer-events: none;
+}
+.toast {
+  background: #1e293b;
+  color: #fff;
+  padding: 16px 30px;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  animation: zoomIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  width: 100%;
+  text-align: center;
+  pointer-events: auto;
+  border-right: 6px solid #38bdf8;
+}
+.toast.success { border-right-color: #22c55e; }
+.toast.error { border-right-color: #ef4444; }
+.toast.warning { border-right-color: #f59e0b; }
+
+@keyframes zoomIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
 /* Pagination */
 .pagination{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:20px;flex-wrap:wrap}
 .pagination button{padding:8px 16px;border:1px solid #e2e8f0;background:#fff;border-radius:30px;cursor:pointer;font-family:inherit;font-size:13px;transition:all 0.2s}
@@ -97,6 +129,7 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
 .pagination .page-num{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-size:13px;transition:all 0.2s}
 .pagination .page-num.active{background:#0f172a;color:#fff;border-color:#0f172a}
 .pagination .page-num:hover:not(.active){background:#f1f5f9}
+
 /* تحسين صندوق تسجيل الدخول */
 .login-container {
   min-height: 100vh;
@@ -196,7 +229,7 @@ input:focus,select:focus,textarea:focus{border-color:#38bdf8}
 </head>
 <body>
 
-<!-- Toast Container -->
+<!-- Toast Container (منتصف الشاشة) -->
 <div class="toast-container" id="toastContainer"></div>
 
 <div id="loginScreen" class="login-container">
@@ -430,7 +463,8 @@ function showToast(message, type = 'success') {
   container.appendChild(toast);
   setTimeout(() => {
     toast.style.opacity = '0';
-    toast.style.transition = 'opacity 0.3s';
+    toast.style.transform = 'scale(0.9)';
+    toast.style.transition = 'all 0.3s ease';
     setTimeout(() => toast.remove(), 300);
   }, 4000);
 }
@@ -1121,7 +1155,68 @@ function generateReport() {
   showToast('تم إنشاء التقرير', 'success');
 }
 
-function printReport() { generateReport(); setTimeout(() => window.print(), 100); }
+// ================================================================
+// ==================== طباعة التقرير (نافذة جديدة) ===============
+// ================================================================
+function printReport() {
+  // الحصول على محتوى التقرير
+  const reportContent = document.getElementById('reportPreview').innerHTML;
+  if (!reportContent || reportContent.trim() === '') {
+    showToast('الرجاء عرض التقرير أولاً', 'warning');
+    return;
+  }
+  
+  // فتح نافذة جديدة
+  const printWindow = window.open('', '_blank', 'width=800,height=600');
+  if (!printWindow) {
+    showToast('الرجاء السماح بالنوافذ المنبثقة', 'error');
+    return;
+  }
+  
+  // كتابة محتوى التقرير فقط في النافذة الجديدة
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>التقرير المالي</title>
+      <style>
+        body { font-family: 'Cairo', sans-serif; direction: rtl; padding: 30px; background: #fff; }
+        .stat-card { 
+          display: inline-block; 
+          background: #f8fafc; 
+          border-radius: 12px; 
+          padding: 15px 25px; 
+          margin: 0 10px 15px 10px;
+          text-align: center;
+          min-width: 120px;
+        }
+        .stat-card .value { font-size: 24px; font-weight: 800; color: #0f172a; }
+        .stat-card .label { font-size: 12px; color: #64748b; margin-top: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { background: #f1f5f9; padding: 10px; border: 1px solid #e2e8f0; }
+        td { padding: 8px; border: 1px solid #e2e8f0; }
+        .total-row { margin-top: 15px; padding: 10px; background: #f1f5f9; border-radius: 12px; font-weight: bold; }
+        @media print {
+          body { padding: 20px; }
+          .stat-card { background: #f1f5f9; }
+        }
+      </style>
+    </head>
+    <body>
+      ${reportContent}
+    </body>
+    </html>
+  `);
+  
+  printWindow.document.close();
+  
+  // انتظار تحميل المحتوى ثم الطباعة
+  setTimeout(() => {
+    printWindow.print();
+    printWindow.close();
+  }, 500);
+}
 
 function exportToExcel() {
   if (!bookings.length) { showToast('لا توجد بيانات للتصدير', 'warning'); return; }
@@ -1279,7 +1374,7 @@ async function syncWithSheet() {
   }
 }
 
-function startAutoSync(intervalMs = 15000) { // تقليل إلى 15 ثانية
+function startAutoSync(intervalMs = 15000) {
   if (syncInterval) clearInterval(syncInterval);
   syncInterval = setInterval(syncWithSheet, intervalMs);
   console.log(`🔄 بدء المزامنة التلقائية كل ${intervalMs/1000} ثانية`);
@@ -1428,7 +1523,7 @@ async function uploadTripDoc() {
       document.getElementById('currentUserName').textContent = u.fullName || u.username;
       document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('ar-JO');
       renderAll();
-      startAutoSync(15000); // 15 ثانية
+      startAutoSync(15000);
     } else {
       localStorage.removeItem('current_session');
     }
